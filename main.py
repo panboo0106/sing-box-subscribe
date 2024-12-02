@@ -1,9 +1,16 @@
-import json, os, tool, time, requests, sys, importlib, argparse, yaml, ruamel.yaml
+import json
+import os
+import tool
+import time
+import requests
+import sys
+import importlib
+import argparse
+import yaml
+import ruamel.yaml
 import re
 from datetime import datetime
 from urllib.parse import urlparse
-from collections import OrderedDict
-from api.app import TEMP_DIR
 from parsers.clash2base64 import clash2v2ray
 from gh_proxy_helper import set_gh_proxy
 
@@ -198,7 +205,7 @@ def parse_content(content):
             continue
         try:
             node = factory(t)
-        except Exception as e:  #节点解析失败，跳过
+        except Exception:  #节点解析失败，跳过
             pass
         if node:
             nodelist.append(node)
@@ -580,12 +587,14 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--temp_json_data', type=parse_json, help='临时内容')
     parser.add_argument('--template_index', type=int, help='模板序号')
-    parser.add_argument('--gh_proxy_index', type=str, help='github加速链接')
+    parser.add_argument('--custom_providers', type=str, help='自定义配置')
     args = parser.parse_args()
     temp_json_data = args.temp_json_data
     gh_proxy_index = args.gh_proxy_index
     if temp_json_data and temp_json_data != '{}':
         providers = json.loads(temp_json_data)
+    elif args.custom_providers:
+        providers = load_json(args.custom_providers)
     else:
         providers = load_json('providers.json')  # 加载本地 providers.json
     if providers.get('config_template'):
