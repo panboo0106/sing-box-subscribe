@@ -135,7 +135,16 @@
     {
       "tag": "Global",
       "type": "selector",
-      "outbounds": ["direct", "auto"]
+      "outbounds": [
+        "direct",
+        "auto",
+        "HongKong",
+        "TaiWan",
+        "Singapore",
+        "Japan",
+        "America",
+        "Others"
+      ]
     },
     {
       "tag": "China",
@@ -146,6 +155,59 @@
       "tag": "AdBlock",
       "type": "selector",
       "outbounds": ["block", "direct"]
+    },
+    {
+      "tag": "HongKong",
+      "type": "selector",
+      "outbounds": ["{all}"],
+      "filter": [
+        { "action": "include", "keywords": ["🇭🇰|HK|hk|香港|港|HongKong"] }
+      ]
+    },
+    {
+      "tag": "TaiWan",
+      "type": "selector",
+      "outbounds": ["{all}"],
+      "filter": [
+        { "action": "include", "keywords": ["🇹🇼|TW|tw|台湾|臺灣|台|Taiwan"] }
+      ]
+    },
+    {
+      "tag": "Singapore",
+      "type": "selector",
+      "outbounds": ["{all}"],
+      "filter": [
+        { "action": "include", "keywords": ["🇸🇬|SG|sg|新加坡|狮|Singapore"] }
+      ]
+    },
+    {
+      "tag": "Japan",
+      "type": "selector",
+      "outbounds": ["{all}"],
+      "filter": [
+        { "action": "include", "keywords": ["🇯🇵|JP|jp|日本|日|Japan"] }
+      ]
+    },
+    {
+      "tag": "America",
+      "type": "selector",
+      "outbounds": ["{all}"],
+      "filter": [
+        { "action": "include", "keywords": ["🇺🇸|US|us|美国|美|United States"] }
+      ]
+    },
+    {
+      "tag": "Others",
+      "type": "selector",
+      "outbounds": ["{all}"],
+      "filter": [
+        {
+          "action": "exclude",
+          "keywords": [
+            "🇭🇰|HK|hk|香港|香|🇹🇼|TW|tw|台湾|台|🇸🇬|SG|sg|新加坡|狮|🇯🇵|JP|jp|日本|日|🇺🇸|US|us|美国|美"
+          ]
+        }
+      ]
     },
     {
       "tag": "auto",
@@ -214,7 +276,7 @@
         "outbound": "direct"
       },
       {
-        "domain": ["api.claude.ai", "claude.ai"],
+        "domain": ["api.claude.ai", "claude.ai", "gemini.google"],
         "outbound": "AI"
       },
       {
