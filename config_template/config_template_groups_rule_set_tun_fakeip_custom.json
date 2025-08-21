@@ -152,7 +152,8 @@
       "tag": "AI",
       "type": "selector",
       "outbounds": [
-        "self-build"
+        "nard",
+        "ouo"
       ]
     },
     {
@@ -271,21 +272,6 @@
           "action": "exclude",
           "keywords": [
             "🇭🇰|HK|hk|香港|香|🇹🇼|TW|tw|台湾|台|🇸🇬|SG|sg|新加坡|狮|🇯🇵|JP|jp|日本|日|🇺🇸|US|us|美国|美"
-          ]
-        }
-      ]
-    },
-    {
-      "tag": "self-build",
-      "type": "selector",
-      "outbounds": [
-        "{all}"
-      ],
-      "filter": [
-        {
-          "action": "include",
-          "keywords": [
-            "🤓"
           ]
         }
       ]

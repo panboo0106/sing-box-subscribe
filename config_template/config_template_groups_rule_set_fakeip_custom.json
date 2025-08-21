@@ -55,7 +55,9 @@
         "server": "block"
       },
       {
-        "domain_keyword": ["sangfor"],
+        "domain_keyword": [
+          "sangfor"
+        ],
         "server": "local"
       },
       {
@@ -71,7 +73,10 @@
         "server": "google"
       },
       {
-        "query_type": ["A", "AAAA"],
+        "query_type": [
+          "A",
+          "AAAA"
+        ],
         "rule_set": "geosite-cn",
         "server": "local"
       },
@@ -95,7 +100,10 @@
         "client_subnet": "114.114.114.114/24"
       },
       {
-        "query_type": ["A", "AAAA"],
+        "query_type": [
+          "A",
+          "AAAA"
+        ],
         "server": "fakeip"
       }
     ],
@@ -108,19 +116,27 @@
       "type": "mixed",
       "listen": "127.0.0.1",
       "listen_port": 7890,
-      "sniff": true
+      "sniff": true,
+      "set_system_proxy": true
     }
   ],
   "outbounds": [
     {
       "tag": "Proxy",
       "type": "selector",
-      "outbounds": ["auto", "direct", "{all}"]
+      "outbounds": [
+        "auto",
+        "direct",
+        "{all}"
+      ]
     },
     {
       "tag": "AI",
       "type": "selector",
-      "outbounds": ["overseas", "airport"]
+      "outbounds": [
+        "nard",
+        "ouo"
+      ]
     },
     {
       "tag": "Global",
@@ -139,57 +155,100 @@
     {
       "tag": "China",
       "type": "selector",
-      "outbounds": ["direct", "Proxy"]
+      "outbounds": [
+        "direct",
+        "Proxy"
+      ]
     },
     {
       "tag": "AdBlock",
       "type": "selector",
-      "outbounds": ["block", "direct"]
+      "outbounds": [
+        "block",
+        "direct"
+      ]
     },
     {
       "tag": "HongKong",
       "type": "selector",
-      "outbounds": ["{all}"],
+      "outbounds": [
+        "{all}"
+      ],
       "filter": [
-        { "action": "include", "keywords": ["🇭🇰|HK|hk|香港|港|HongKong"] }
+        {
+          "action": "include",
+          "keywords": [
+            "🇭🇰|HK|hk|香港|港|HongKong"
+          ]
+        }
       ]
     },
     {
       "tag": "TaiWan",
       "type": "selector",
-      "outbounds": ["{all}"],
+      "outbounds": [
+        "{all}"
+      ],
       "filter": [
-        { "action": "include", "keywords": ["🇹🇼|TW|tw|台湾|臺灣|台|Taiwan"] }
+        {
+          "action": "include",
+          "keywords": [
+            "🇹🇼|TW|tw|台湾|臺灣|台|Taiwan"
+          ]
+        }
       ]
     },
     {
       "tag": "Singapore",
       "type": "selector",
-      "outbounds": ["{all}"],
+      "outbounds": [
+        "{all}"
+      ],
       "filter": [
-        { "action": "include", "keywords": ["🇸🇬|SG|sg|新加坡|狮|Singapore"] }
+        {
+          "action": "include",
+          "keywords": [
+            "🇸🇬|SG|sg|新加坡|狮|Singapore"
+          ]
+        }
       ]
     },
     {
       "tag": "Japan",
       "type": "selector",
-      "outbounds": ["{all}"],
+      "outbounds": [
+        "{all}"
+      ],
       "filter": [
-        { "action": "include", "keywords": ["🇯🇵|JP|jp|日本|日|Japan"] }
+        {
+          "action": "include",
+          "keywords": [
+            "🇯🇵|JP|jp|日本|日|Japan"
+          ]
+        }
       ]
     },
     {
       "tag": "America",
       "type": "selector",
-      "outbounds": ["{all}"],
+      "outbounds": [
+        "{all}"
+      ],
       "filter": [
-        { "action": "include", "keywords": ["🇺🇸|US|us|美国|美|United States"] }
+        {
+          "action": "include",
+          "keywords": [
+            "🇺🇸|US|us|美国|美|United States"
+          ]
+        }
       ]
     },
     {
       "tag": "Others",
       "type": "selector",
-      "outbounds": ["{all}"],
+      "outbounds": [
+        "{all}"
+      ],
       "filter": [
         {
           "action": "exclude",
@@ -202,9 +261,16 @@
     {
       "tag": "auto",
       "type": "urltest",
-      "outbounds": ["{all}"],
+      "outbounds": [
+        "{all}"
+      ],
       "filter": [
-        { "action": "exclude", "keywords": ["网站|地址|剩余|过期|时间|有效"] }
+        {
+          "action": "exclude",
+          "keywords": [
+            "网站|地址|剩余|过期|时间|有效"
+          ]
+        }
       ],
       "url": "http://www.gstatic.com/generate_204",
       "interval": "10m",
@@ -228,7 +294,10 @@
     "final": "Proxy",
     "rules": [
       {
-        "inbound": ["tun-in", "mixed-in"],
+        "inbound": [
+          "tun-in",
+          "mixed-in"
+        ],
         "action": "sniff"
       },
       {
@@ -268,7 +337,9 @@
         "outbound": "direct"
       },
       {
-        "domain": ["200.200.1.113"],
+        "domain": [
+          "200.200.1.113"
+        ],
         "outbound": "direct"
       },
       {
@@ -276,7 +347,12 @@
         "outbound": "direct"
       },
       {
-        "domain": ["api.claude.ai", "claude.ai", "gemini.google", "deepseek.com"],
+        "domain": [
+          "api.claude.ai",
+          "claude.ai",
+          "gemini.google",
+          "deepseek.com"
+        ],
         "outbound": "AI"
       },
       {
@@ -288,7 +364,10 @@
         "outbound": "Global"
       },
       {
-        "rule_set": ["geoip-cn", "geosite-cn"],
+        "rule_set": [
+          "geoip-cn",
+          "geosite-cn"
+        ],
         "outbound": "China"
       }
     ],

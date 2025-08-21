@@ -12,7 +12,6 @@ import re
 from datetime import datetime
 from urllib.parse import urlparse
 from parsers.clash2base64 import clash2v2ray
-from gh_proxy_helper import set_gh_proxy
 
 parsers_mod = {}
 providers = None
