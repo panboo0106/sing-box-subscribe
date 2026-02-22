@@ -365,6 +365,8 @@ def set_proxy_rule_dns(config):
     dns_rules = config['dns']['rules']
     asod = providers["auto_set_outbounds_dns"]
     for rule in config_rules:
+        if 'outbound' not in rule:
+            continue
         if rule['outbound'] not in ['block', 'dns-out']:
             if rule['outbound'] != 'direct':
                 outbounds_dns_template = \
@@ -581,13 +583,16 @@ if __name__ == '__main__':
     parser.add_argument('--temp_json_data', type=parse_json, help='临时内容')
     parser.add_argument('--template_index', type=int, help='模板序号')
     parser.add_argument('--gh_proxy_index', type=str, help='github加速链接')
+    parser.add_argument('--providers', type=str, default='providers.json',
+                        help='指定订阅配置文件路径（默认: providers.json）。使用本地配置文件可防止订阅链接泄露到git仓库')
     args = parser.parse_args()
     temp_json_data = args.temp_json_data
     gh_proxy_index = args.gh_proxy_index
+    providers_file = args.providers
     if temp_json_data and temp_json_data != '{}':
         providers = json.loads(temp_json_data)
     else:
-        providers = load_json('providers.json')  # 加载本地 providers.json
+        providers = load_json(providers_file)  # 加载本地 providers.json 或用户指定的文件
     if providers.get('config_template'):
         config_template_path = providers['config_template']
         print('选择: \033[33m' + config_template_path + '\033[0m')

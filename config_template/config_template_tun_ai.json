@@ -8,6 +8,8 @@
       "external_controller": "127.0.0.1:9090",
       "external_ui": "ui",
       "secret": "",
+      "external_ui_download_url": "https://gh-proxy.com/https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip",
+      "external_ui_download_detour": "direct",
       "default_mode": "rule"
     },
     "cache_file": {
@@ -37,8 +39,13 @@
     ],
     "rules": [
       {
-        "query_type": ["A", "AAAA"],
-        "rule_set": ["geosite-cn"],
+        "query_type": [
+          "A",
+          "AAAA"
+        ],
+        "rule_set": [
+          "geosite-cn"
+        ],
         "action": "route",
         "server": "fakeip"
       },
@@ -54,7 +61,10 @@
         "server": "remote"
       },
       {
-        "rule_set": ["geosite-openai", "geosite-anthropic"],
+        "rule_set": [
+          "geosite-openai",
+          "geosite-anthropic"
+        ],
         "action": "route",
         "server": "remote"
       },
@@ -74,7 +84,10 @@
         "server": "remote"
       },
       {
-        "query_type": ["A", "AAAA"],
+        "query_type": [
+          "A",
+          "AAAA"
+        ],
         "action": "route",
         "server": "fakeip"
       }
@@ -85,7 +98,9 @@
     {
       "tag": "tun-in",
       "type": "tun",
-      "address": ["172.19.0.0/30"],
+      "address": [
+        "172.19.0.0/30"
+      ],
       "auto_route": true,
       "strict_route": true,
       "stack": "system"
@@ -101,17 +116,27 @@
     {
       "tag": "Proxy",
       "type": "selector",
-      "outbounds": ["AI", "auto", "direct", "{all}"]
+      "outbounds": [
+        "auto",
+        "AI",
+        "direct",
+        "{all}"
+      ]
     },
     {
       "tag": "AI",
       "type": "selector",
-      "outbounds": ["自建节点", "auto"]
+      "outbounds": [
+        "自建节点",
+        "auto"
+      ]
     },
     {
       "tag": "auto",
       "type": "urltest",
-      "outbounds": ["{all}"],
+      "outbounds": [
+        "{all}"
+      ],
       "url": "http://www.gstatic.com/generate_204",
       "interval": "10m",
       "tolerance": 50
@@ -123,27 +148,45 @@
     {
       "tag": "Global",
       "type": "selector",
-      "outbounds": ["{all}", "direct"]
+      "outbounds": [
+        "{all}",
+        "direct"
+      ]
     },
     {
       "tag": "China",
       "type": "selector",
-      "outbounds": ["direct", "Proxy"]
+      "outbounds": [
+        "direct",
+        "Proxy"
+      ]
     }
   ],
   "route": {
     "auto_detect_interface": true,
     "final": "Proxy",
-    "default_domain_resolver": {"server": "local"},
+    "default_domain_resolver": {
+      "server": "local"
+    },
     "rules": [
       {
-        "inbound": ["tun-in", "mixed-in"],
+        "inbound": [
+          "tun-in",
+          "mixed-in"
+        ],
         "action": "sniff"
       },
       {
         "type": "logical",
         "mode": "or",
-        "rules": [{"port": 53}, {"protocol": "dns"}],
+        "rules": [
+          {
+            "port": 53
+          },
+          {
+            "protocol": "dns"
+          }
+        ],
         "action": "hijack-dns"
       },
       {
@@ -162,12 +205,18 @@
         "outbound": "AI"
       },
       {
-        "rule_set": ["geosite-openai", "geosite-anthropic"],
+        "rule_set": [
+          "geosite-openai",
+          "geosite-anthropic"
+        ],
         "action": "route",
         "outbound": "AI"
       },
       {
-        "rule_set": ["geoip-cn", "geosite-cn"],
+        "rule_set": [
+          "geoip-cn",
+          "geosite-cn"
+        ],
         "action": "route",
         "outbound": "direct"
       },

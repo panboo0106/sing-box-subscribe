@@ -25,6 +25,69 @@ python main.py
 python main.py --template_index=0
 ```
 
+#### 使用本地配置文件（保护订阅链接）
+
+为了防止订阅链接泄露到 Git 仓库，推荐使用本地配置文件：
+
+```bash
+# 1. 复制示例配置文件
+cp providers.example.json local_providers.json
+
+# 2. 编辑 local_providers.json，添加你的订阅链接
+
+# 3. 运行时使用 --providers 参数指定本地配置文件
+python main.py --providers ./local_providers.json --template_index=0
+```
+
+**注意：** `local_providers.json` 已被 `.gitignore` 排除，不会被提交到 Git 仓库，保护你的订阅链接安全。
+
+详细文档请参考：[docs/local-providers-usage.md](docs/local-providers-usage.md)
+
+#### local_providers.json 字段说明
+
+```json
+{
+  "subscribes": [
+    {
+      "url": "订阅链接或本地文件路径",
+      "tag": "内部标识符",
+      "enabled": true,
+      "emoji": 1,
+      "subgroup": "订阅名称",
+      "prefix": "节点名前缀",
+      "ex-node-name": "关键词1|关键词2",
+      "User-Agent": "clashmeta"
+    }
+  ],
+  "auto_set_outbounds_dns": {
+    "proxy": "dns_proxy",
+    "direct": "dns_direct"
+  },
+  "save_config_path": "./config.json",
+  "auto_backup": false,
+  "exclude_protocol": "ssr",
+  "config_template": "",
+  "Only-nodes": false
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| url | string | 订阅链接（支持 V2/Clash/Sing-box 格式）或本地文件路径 |
+| tag | string | 内部标识符，用于在配置模板中引用 |
+| enabled | boolean | 是否启用此订阅（true/false） |
+| emoji | number | 是否在节点名添加国旗 emoji（1/0） |
+| subgroup | string | 订阅名称，会自动生成对应的出站组 |
+| prefix | string | 节点名前缀（空字符串表示不添加） |
+| ex-node-name | string | 过滤节点关键词，多个用 \| 分隔（排除） |
+| User-Agent | string | 请求订阅时使用的 UA（如 clashmeta/sing-box/v2rayng） |
+| auto_set_outbounds_dns | object | 自动设置出站对应的 DNS 服务器 |
+| save_config_path | string | 生成配置文件的保存路径 |
+| auto_backup | boolean | 是否自动备份旧配置（true/false） |
+| exclude_protocol | string | 排除的协议类型（如 ssr,vmess，用逗号分隔） |
+| config_template | string | 自定义配置模板的 URL |
+| Only-nodes | boolean | 是否仅输出节点信息（true/false） |
+
 支持Docker
 
 ```

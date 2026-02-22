@@ -8,6 +8,8 @@
       "external_controller": "127.0.0.1:9090",
       "external_ui": "ui",
       "secret": "",
+      "external_ui_download_url": "https://gh-proxy.com/https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip",
+      "external_ui_download_detour": "direct",
       "default_mode": "rule"
     },
     "cache_file": {
@@ -37,8 +39,13 @@
     ],
     "rules": [
       {
-        "query_type": ["A", "AAAA"],
-        "rule_set": ["geosite-cn"],
+        "query_type": [
+          "A",
+          "AAAA"
+        ],
+        "rule_set": [
+          "geosite-cn"
+        ],
         "action": "route",
         "server": "fakeip"
       },
@@ -77,7 +84,10 @@
         "server": "remote"
       },
       {
-        "query_type": ["A", "AAAA"],
+        "query_type": [
+          "A",
+          "AAAA"
+        ],
         "action": "route",
         "server": "fakeip"
       }
@@ -98,8 +108,8 @@
       "tag": "Proxy",
       "type": "selector",
       "outbounds": [
-        "AI",
         "auto",
+        "AI",
         "direct",
         "{all}"
       ]

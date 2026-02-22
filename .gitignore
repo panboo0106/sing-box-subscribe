@@ -3,11 +3,20 @@
 *.pyc
 __pycache__
 
-# Environments 
-.env 
-.venv 
-env/ 
+# Environments
+.env
+.venv
+env/
 venv/
-ENV/ 
-env.bak/ 
-venv.bak/ 
+ENV/
+env.bak/
+venv.bak/
+
+# Local configuration files (to protect subscription links)
+# Users can create local_providers.json to store private subscription links
+# This file will NOT be committed to the repository
+local_providers.json
+*.local.json
+providers.local.json
+
+config.json
