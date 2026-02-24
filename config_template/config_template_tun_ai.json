@@ -35,6 +35,12 @@
         "type": "fakeip",
         "inet4_range": "198.18.0.0/15",
         "inet6_range": "fc00::/18"
+      },
+      {
+        "tag": "tailscale-dns",
+        "type": "udp",
+        "server": "100.100.100.100",
+        "detour": "direct"
       }
     ],
     "rules": [
@@ -67,6 +73,11 @@
         ],
         "action": "route",
         "server": "remote"
+      },
+      {
+        "domain_suffix": [".ts.net"],
+        "action": "route",
+        "server": "tailscale-dns"
       },
       {
         "rule_set": "geosite-cn",
@@ -218,10 +229,15 @@
           "geosite-cn"
         ],
         "action": "route",
-        "outbound": "direct"
+        "outbound": "China"
       },
       {
         "ip_is_private": true,
+        "action": "route",
+        "outbound": "direct"
+      },
+      {
+        "ip_cidr": ["100.64.0.0/10"],
         "action": "route",
         "outbound": "direct"
       }
