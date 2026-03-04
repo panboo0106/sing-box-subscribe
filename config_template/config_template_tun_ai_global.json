@@ -66,7 +66,9 @@
           "generativelanguage.googleapis.com",
           "aiplatform.googleapis.com",
           "makersuite.google.com",
-          "aistudio.google.com"
+          "aistudio.google.com",
+          "alkalicore-pa.clients6.google.com",
+          "alkalimakersuite-pa.clients6.google.com"
         ],
         "action": "route",
         "server": "remote"
@@ -74,7 +76,10 @@
       {
         "rule_set": [
           "geosite-openai",
-          "geosite-anthropic"
+          "geosite-anthropic",
+          "geosite-google-gemini",
+          "geosite-perplexity",
+          "geosite-copilot"
         ],
         "action": "route",
         "server": "remote"
@@ -101,11 +106,20 @@
       "tag": "tun-in",
       "type": "tun",
       "address": [
-        "172.19.0.0/30"
+        "172.19.0.1/30",
+        "fdfe:dcba:9876::1/126"
       ],
       "auto_route": true,
       "strict_route": true,
-      "stack": "gvisor"
+      "stack": "gvisor",
+      "mtu": 9000,
+      "platform": {
+        "http_proxy": {
+          "enabled": true,
+          "server": "127.0.0.1",
+          "server_port": 7890
+        }
+      }
     },
     {
       "tag": "mixed-in",
@@ -121,6 +135,13 @@
       "outbounds": [
         "auto",
         "AI",
+        "Global",
+        "HK",
+        "TW",
+        "SG",
+        "JP",
+        "US",
+        "Others",
         "direct",
         "{all}"
       ]
@@ -129,7 +150,131 @@
       "tag": "AI",
       "type": "selector",
       "outbounds": [
+        "SelfBuild",
+        "US",
+        "JP",
+        "SG",
         "auto"
+      ],
+      "default": "SelfBuild"
+    },
+    {
+      "tag": "Global",
+      "type": "selector",
+      "outbounds": [
+        "SelfBuild",
+        "HK",
+        "TW",
+        "SG",
+        "JP",
+        "US",
+        "Others",
+        "auto"
+      ]
+    },
+    {
+      "tag": "SelfBuild",
+      "type": "selector",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "自建|selfbuild|🏠"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "HK",
+      "type": "selector",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "香港|Hong Kong|HK|🇭🇰"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "TW",
+      "type": "selector",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "台湾|台灣|Taiwan|TW|🇹🇼"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "SG",
+      "type": "selector",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "新加坡|Singapore|SG|🇸🇬"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "JP",
+      "type": "selector",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "日本|Japan|JP|🇯🇵"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "US",
+      "type": "selector",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "美国|美國|United States|US|USA|America|🇺🇸"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "Others",
+      "type": "selector",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "exclude",
+          "keywords": [
+            "香港|Hong Kong|HK|🇭🇰|台湾|台灣|Taiwan|TW|🇹🇼|新加坡|Singapore|SG|🇸🇬|日本|Japan|JP|🇯🇵|美国|美國|United States|US|USA|America|🇺🇸|自建|selfbuild|🏠"
+          ]
+        }
       ]
     },
     {
@@ -138,8 +283,16 @@
       "outbounds": [
         "{all}"
       ],
+      "filter": [
+        {
+          "action": "exclude",
+          "keywords": [
+            "网站|地址|剩余|过期|时间|有效"
+          ]
+        }
+      ],
       "url": "http://www.gstatic.com/generate_204",
-      "interval": "10m",
+      "interval": "5m",
       "tolerance": 50
     },
     {
@@ -147,20 +300,8 @@
       "type": "direct"
     },
     {
-      "tag": "Global",
-      "type": "selector",
-      "outbounds": [
-        "{all}",
-        "direct"
-      ]
-    },
-    {
-      "tag": "China",
-      "type": "selector",
-      "outbounds": [
-        "direct",
-        "Proxy"
-      ]
+      "tag": "block",
+      "type": "block"
     }
   ],
   "route": {
@@ -209,7 +350,8 @@
           "clash.razord.top",
           "yacd.metacubex.one",
           "yacd.haishan.me",
-          "d.metacubex.one"
+          "d.metacubex.one",
+          "metacubexd.pages.dev"
         ],
         "action": "route",
         "outbound": "direct"
@@ -220,7 +362,20 @@
         "outbound": "direct"
       },
       {
-        "ip_cidr": ["100.64.0.0/10"],
+        "ip_cidr": [
+          "100.64.0.0/10",
+          "10.0.0.0/8",
+          "172.16.0.0/12",
+          "192.168.0.0/16"
+        ],
+        "action": "route",
+        "outbound": "direct"
+      },
+      {
+        "domain_suffix": [
+          ".ts.net",
+          ".tailscale.net"
+        ],
         "action": "route",
         "outbound": "direct"
       },
@@ -230,7 +385,27 @@
           "generativelanguage.googleapis.com",
           "aiplatform.googleapis.com",
           "makersuite.google.com",
-          "aistudio.google.com"
+          "aistudio.google.com",
+          "alkalicore-pa.clients6.google.com",
+          "alkalimakersuite-pa.clients6.google.com",
+          "gateway.ai.cloudflare.com",
+          "openai.com",
+          "chat.openai.com",
+          "api.openai.com",
+          "platform.openai.com",
+          "cdn.openai.com",
+          "auth.openai.com",
+          "files.oaiusercontent.com",
+          "claude.ai",
+          "api.claude.ai",
+          "anthropic.com",
+          "api.anthropic.com",
+          "console.anthropic.com",
+          "perplexity.ai",
+          "copilot.microsoft.com",
+          "sydney.bing.com",
+          "chat.deepseek.com",
+          "api.deepseek.com"
         ],
         "action": "route",
         "outbound": "AI"
@@ -238,7 +413,10 @@
       {
         "rule_set": [
           "geosite-openai",
-          "geosite-anthropic"
+          "geosite-anthropic",
+          "geosite-google-gemini",
+          "geosite-perplexity",
+          "geosite-copilot"
         ],
         "action": "route",
         "outbound": "AI"
@@ -249,7 +427,7 @@
           "geosite-cn"
         ],
         "action": "route",
-        "outbound": "China"
+        "outbound": "direct"
       }
     ],
     "rule_set": [
@@ -272,6 +450,27 @@
         "type": "remote",
         "format": "binary",
         "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/anthropic.srs",
+        "download_detour": "direct"
+      },
+      {
+        "tag": "geosite-google-gemini",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/google-gemini.srs",
+        "download_detour": "direct"
+      },
+      {
+        "tag": "geosite-perplexity",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/perplexity.srs",
+        "download_detour": "direct"
+      },
+      {
+        "tag": "geosite-copilot",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/copilot.srs",
         "download_detour": "direct"
       },
       {

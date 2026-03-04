@@ -129,7 +129,6 @@
       "tag": "AI",
       "type": "selector",
       "outbounds": [
-        "自建节点",
         "auto"
       ]
     },
