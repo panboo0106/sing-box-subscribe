@@ -19,7 +19,7 @@ Use the website you built to achieve real-time configuration updates, which can 
 For example, the website I built [https://sing-box-subscribe.vercel.app](https://sing-box-subscribe.vercel.app), add `/config/URL_LINK` after the website, here` URL_LINK` refers to the subscription link
 
 ```
-https://xxxxxxx.vercel.app/config/https://xxxxxxsubscribe?token=123456&file=https://github.com/Toperlock/sing-box-subscribe/raw/main/config_template/config_template_groups_rule_set_tun.json
+https://xxxxxxx.vercel.app/config/https://xxxxxxsubscribe?token=123456&file=https://github.com/Toperlock/sing-box-subscribe/raw/main/config_template/03-full-streaming/streaming-full.json
 ```
 
 ### 2024.2.16 Update: Support adding `emoji`, `tag`, `prefix`, `ua`, `file`, `eps` , `enn` parameters after the link. Use `&` to connect multiple parameters. The usage is the same as the parameters in `providers.json`
@@ -175,7 +175,7 @@ For Windows systems, it's recommended to add the commands to a batch program for
 
 Before using, make sure to edit the `providers.json` file and the `.json` template files in the `config_template` directory.
 
-A lazy configuration `config_template_groups_rule_set_tun` file is included, which allows filtering nodes based on different categories:
+A lazy configuration `03-full-streaming/streaming-full.json` file is included, which allows filtering nodes based on different categories:
 * Implement `Openai` routing rules
 * Implement `Youtube` routing rules
 * Implement `Google` routing rules

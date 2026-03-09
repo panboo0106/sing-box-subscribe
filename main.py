@@ -29,9 +29,16 @@ def init_parsers():
 
 def get_template():
     template_dir = 'config_template'  # 配置模板文件夹路径
-    template_files = os.listdir(template_dir)  # 获取文件夹中的所有文件
-    template_list = [os.path.splitext(file)[0] for file in template_files if
-                     file.endswith('.json')]  # 移除扩展名并过滤出以.json结尾的文件
+    template_list = []
+    # 递归遍历所有子目录
+    for root, dirs, files in os.walk(template_dir):
+        for file in files:
+            if file.endswith('.json'):
+                # 获取相对路径并移除扩展名
+                full_path = os.path.join(root, file)
+                rel_path = os.path.relpath(full_path, template_dir)
+                template_name = os.path.splitext(rel_path)[0]
+                template_list.append(template_name)
     template_list.sort()  # 对文件名进行排序
     return template_list
 

@@ -14,7 +14,7 @@
     },
     "cache_file": {
       "enabled": true,
-      "store_fakeip": true,
+      "store_fakeip": false,
       "store_rdrc": true
     }
   },
@@ -23,8 +23,7 @@
       {
         "tag": "remote",
         "type": "tls",
-        "server": "8.8.8.8",
-        "detour": "Proxy"
+        "server": "8.8.8.8"
       },
       {
         "tag": "local",
@@ -32,16 +31,9 @@
         "server": "223.5.5.5"
       },
       {
-        "tag": "fakeip",
-        "type": "fakeip",
-        "inet4_range": "198.18.0.0/15",
-        "inet6_range": "fc00::/18"
-      },
-      {
         "tag": "tailscale-dns",
         "type": "udp",
-        "server": "100.100.100.100",
-        "detour": "direct"
+        "server": "100.100.100.100"
       }
     ],
     "rules": [
@@ -56,7 +48,7 @@
         "server": "remote"
       },
       {
-        "domain_suffix": [".ts.net"],
+        "domain_suffix": ".ts.net",
         "action": "route",
         "server": "tailscale-dns"
       },
@@ -83,14 +75,6 @@
         "rule_set": "geosite-cn",
         "action": "route",
         "server": "local"
-      },
-      {
-        "query_type": [
-          "A",
-          "AAAA"
-        ],
-        "action": "route",
-        "server": "fakeip"
       }
     ],
     "final": "remote",
@@ -98,20 +82,11 @@
   },
   "inbounds": [
     {
-      "tag": "tun-in",
-      "type": "tun",
-      "address": [
-        "172.19.0.0/30"
-      ],
-      "auto_route": true,
-      "strict_route": true,
-      "stack": "gvisor"
-    },
-    {
       "tag": "mixed-in",
       "type": "mixed",
       "listen": "127.0.0.1",
-      "listen_port": 7890
+      "listen_port": 7890,
+      "set_system_proxy": true
     }
   ],
   "outbounds": [
@@ -121,15 +96,16 @@
       "outbounds": [
         "auto",
         "AI",
-        "direct",
-        "{all}"
+        "direct"
       ]
     },
     {
       "tag": "AI",
       "type": "selector",
       "outbounds": [
-        "auto"
+        "selfBuild",
+        "auto",
+        "direct"
       ]
     },
     {
@@ -172,7 +148,6 @@
     "rules": [
       {
         "inbound": [
-          "tun-in",
           "mixed-in"
         ],
         "action": "sniff"
@@ -202,7 +177,7 @@
       {
         "clash_mode": "global",
         "action": "route",
-        "outbound": "Proxy"
+        "outbound": "Global"
       },
       {
         "domain": [
@@ -220,7 +195,9 @@
         "outbound": "direct"
       },
       {
-        "ip_cidr": ["100.64.0.0/10"],
+        "ip_cidr": [
+          "100.64.0.0/10"
+        ],
         "action": "route",
         "outbound": "direct"
       },
@@ -257,35 +234,35 @@
         "tag": "geosite-category-ads-all",
         "type": "remote",
         "format": "binary",
-        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/category-ads-all.srs",
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/category-ads-all.srs",
         "download_detour": "direct"
       },
       {
         "tag": "geosite-openai",
         "type": "remote",
         "format": "binary",
-        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/openai.srs",
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/openai.srs",
         "download_detour": "direct"
       },
       {
         "tag": "geosite-anthropic",
         "type": "remote",
         "format": "binary",
-        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/anthropic.srs",
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/anthropic.srs",
         "download_detour": "direct"
       },
       {
         "tag": "geoip-cn",
         "type": "remote",
         "format": "binary",
-        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geoip/cn.srs",
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geoip/cn.srs",
         "download_detour": "direct"
       },
       {
         "tag": "geosite-cn",
         "type": "remote",
         "format": "binary",
-        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/cn.srs",
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/cn.srs",
         "download_detour": "direct"
       }
     ]

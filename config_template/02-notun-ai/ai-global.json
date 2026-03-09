@@ -40,8 +40,7 @@
       {
         "tag": "tailscale-dns",
         "type": "udp",
-        "server": "100.100.100.100",
-        "detour": "direct"
+        "server": "100.100.100.100"
       }
     ],
     "rules": [
@@ -56,9 +55,7 @@
         "server": "remote"
       },
       {
-        "domain_suffix": [
-          ".ts.net"
-        ],
+        "domain_suffix": [".ts.net"],
         "action": "route",
         "server": "tailscale-dns"
       },
@@ -105,25 +102,6 @@
   },
   "inbounds": [
     {
-      "tag": "tun-in",
-      "type": "tun",
-      "address": [
-        "172.19.0.1/30",
-        "fdfe:dcba:9876::1/126"
-      ],
-      "auto_route": true,
-      "strict_route": true,
-      "stack": "gvisor",
-      "mtu": 9000,
-      "platform": {
-        "http_proxy": {
-          "enabled": true,
-          "server": "127.0.0.1",
-          "server_port": 7890
-        }
-      }
-    },
-    {
       "tag": "mixed-in",
       "type": "mixed",
       "listen": "127.0.0.1",
@@ -137,11 +115,13 @@
       "outbounds": [
         "auto",
         "AI",
-        "US",
-        "JP",
-        "SG",
+        "Global",
         "HK",
         "TW",
+        "SG",
+        "JP",
+        "US",
+        "Others",
         "direct",
         "{all}"
       ]
@@ -150,16 +130,30 @@
       "tag": "AI",
       "type": "selector",
       "outbounds": [
-        "自建节点",
+        "SelfBuild",
         "US",
         "JP",
         "SG",
         "auto"
       ],
-      "default": "自建节点"
+      "default": "SelfBuild"
     },
     {
-      "tag": "selfBuild",
+      "tag": "Global",
+      "type": "selector",
+      "outbounds": [
+        "SelfBuild",
+        "HK",
+        "TW",
+        "SG",
+        "JP",
+        "US",
+        "Others",
+        "auto"
+      ]
+    },
+    {
+      "tag": "SelfBuild",
       "type": "selector",
       "outbounds": [
         "{all}"
@@ -168,7 +162,67 @@
         {
           "action": "include",
           "keywords": [
-            "selfBuild|🏠"
+            "自建|selfbuild|🏠"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "HK",
+      "type": "selector",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "香港|Hong Kong|HK|🇭🇰"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "TW",
+      "type": "selector",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "台湾|台灣|Taiwan|TW|🇹🇼"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "SG",
+      "type": "selector",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "新加坡|Singapore|SG|🇸🇬"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "JP",
+      "type": "selector",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "日本|Japan|JP|🇯🇵"
           ]
         }
       ]
@@ -189,61 +243,16 @@
       ]
     },
     {
-      "tag": "JP",
+      "tag": "Others",
       "type": "selector",
       "outbounds": [
         "{all}"
       ],
       "filter": [
         {
-          "action": "include",
+          "action": "exclude",
           "keywords": [
-            "日本|Japan|JP|JPN|🇯🇵"
-          ]
-        }
-      ]
-    },
-    {
-      "tag": "SG",
-      "type": "selector",
-      "outbounds": [
-        "{all}"
-      ],
-      "filter": [
-        {
-          "action": "include",
-          "keywords": [
-            "新加坡|Singapore|SG|SGP|🇸🇬"
-          ]
-        }
-      ]
-    },
-    {
-      "tag": "HK",
-      "type": "selector",
-      "outbounds": [
-        "{all}"
-      ],
-      "filter": [
-        {
-          "action": "include",
-          "keywords": [
-            "香港|Hong Kong|HK|HKG|🇭🇰"
-          ]
-        }
-      ]
-    },
-    {
-      "tag": "TW",
-      "type": "selector",
-      "outbounds": [
-        "{all}"
-      ],
-      "filter": [
-        {
-          "action": "include",
-          "keywords": [
-            "台湾|台灣|Taiwan|TW|TWN|🇹🇼"
+            "香港|Hong Kong|HK|🇭🇰|台湾|台灣|Taiwan|TW|🇹🇼|新加坡|Singapore|SG|🇸🇬|日本|Japan|JP|🇯🇵|美国|美國|United States|US|USA|America|🇺🇸|自建|selfbuild|🏠"
           ]
         }
       ]
@@ -273,22 +282,6 @@
     {
       "tag": "block",
       "type": "block"
-    },
-    {
-      "tag": "Global",
-      "type": "selector",
-      "outbounds": [
-        "{all}",
-        "direct"
-      ]
-    },
-    {
-      "tag": "China",
-      "type": "selector",
-      "outbounds": [
-        "direct",
-        "Proxy"
-      ]
     }
   ],
   "route": {
@@ -300,7 +293,6 @@
     "rules": [
       {
         "inbound": [
-          "tun-in",
           "mixed-in"
         ],
         "action": "sniff"
@@ -414,7 +406,7 @@
           "geosite-cn"
         ],
         "action": "route",
-        "outbound": "China"
+        "outbound": "direct"
       }
     ],
     "rule_set": [
@@ -422,56 +414,56 @@
         "tag": "geosite-category-ads-all",
         "type": "remote",
         "format": "binary",
-        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/category-ads-all.srs",
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/category-ads-all.srs",
         "download_detour": "direct"
       },
       {
         "tag": "geosite-openai",
         "type": "remote",
         "format": "binary",
-        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/openai.srs",
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/openai.srs",
         "download_detour": "direct"
       },
       {
         "tag": "geosite-anthropic",
         "type": "remote",
         "format": "binary",
-        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/anthropic.srs",
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/anthropic.srs",
         "download_detour": "direct"
       },
       {
         "tag": "geosite-google-gemini",
         "type": "remote",
         "format": "binary",
-        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/google-gemini.srs",
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/google-gemini.srs",
         "download_detour": "direct"
       },
       {
         "tag": "geosite-perplexity",
         "type": "remote",
         "format": "binary",
-        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/perplexity.srs",
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/perplexity.srs",
         "download_detour": "direct"
       },
       {
         "tag": "geosite-copilot",
         "type": "remote",
         "format": "binary",
-        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/copilot.srs",
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/copilot.srs",
         "download_detour": "direct"
       },
       {
         "tag": "geoip-cn",
         "type": "remote",
         "format": "binary",
-        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geoip/cn.srs",
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geoip/cn.srs",
         "download_detour": "direct"
       },
       {
         "tag": "geosite-cn",
         "type": "remote",
         "format": "binary",
-        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/cn.srs",
+        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/cn.srs",
         "download_detour": "direct"
       }
     ]
