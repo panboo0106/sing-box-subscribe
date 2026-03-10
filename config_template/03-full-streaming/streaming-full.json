@@ -21,7 +21,6 @@
     "servers": [
       {
         "tag": "proxyDns",
-        "detour": "Proxy",
         "type": "tls",
         "server": "8.8.8.8"
       },

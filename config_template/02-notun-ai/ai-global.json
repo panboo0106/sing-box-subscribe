@@ -23,8 +23,7 @@
       {
         "tag": "remote",
         "type": "tls",
-        "server": "8.8.8.8",
-        "detour": "Proxy"
+        "server": "8.8.8.8"
       },
       {
         "tag": "local",

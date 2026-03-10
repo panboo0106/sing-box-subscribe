@@ -23,8 +23,7 @@
       {
         "tag": "remote",
         "type": "tls",
-        "server": "8.8.8.8",
-        "detour": "Proxy"
+        "server": "8.8.8.8"
       },
       {
         "tag": "local",
@@ -74,14 +73,9 @@
         "server": "remote"
       },
       {
-        "domain_suffix": ".ts.net",
+        "domain_suffix": [".ts.net"],
         "action": "route",
         "server": "tailscale-dns"
-      },
-      {
-        "rule_set": "geosite-cn",
-        "action": "route",
-        "server": "local"
       },
       {
         "query_type": [
@@ -90,6 +84,11 @@
         ],
         "action": "route",
         "server": "fakeip"
+      },
+      {
+        "rule_set": "geosite-cn",
+        "action": "route",
+        "server": "local"
       }
     ],
     "final": "remote",

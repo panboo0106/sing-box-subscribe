@@ -48,7 +48,7 @@
         "server": "remote"
       },
       {
-        "domain_suffix": ".ts.net",
+        "domain_suffix": [".ts.net"],
         "action": "route",
         "server": "tailscale-dns"
       },
