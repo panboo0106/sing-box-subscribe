@@ -321,7 +321,7 @@
       {
         "clash_mode": "global",
         "action": "route",
-        "outbound": "Proxy"
+        "outbound": "Global"
       },
       {
         "domain": [

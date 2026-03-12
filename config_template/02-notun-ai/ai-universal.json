@@ -85,8 +85,7 @@
       "tag": "mixed-in",
       "type": "mixed",
       "listen": "127.0.0.1",
-      "listen_port": 7890,
-      "set_system_proxy": true
+      "listen_port": 7890
     }
   ],
   "outbounds": [
@@ -151,6 +150,12 @@
           "mixed-in"
         ],
         "action": "sniff"
+      },
+      {
+        "ip_cidr": ["100.100.100.100/32"],
+        "port": 53,
+        "action": "route",
+        "outbound": "direct"
       },
       {
         "type": "logical",

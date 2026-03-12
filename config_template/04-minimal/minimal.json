@@ -9,7 +9,7 @@
       "external_ui": "ui",
       "secret": "",
       "external_ui_download_url": "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip",
-      "external_ui_download_detour": "",
+      "external_ui_download_detour": "direct",
       "default_mode": "rule"
     },
     "cache_file": {
@@ -41,7 +41,8 @@
         "action": "route",
         "server": "proxyDns"
       }
-    ]
+    ],
+    "final": "localDns"
   },
   "inbounds": [
     {
