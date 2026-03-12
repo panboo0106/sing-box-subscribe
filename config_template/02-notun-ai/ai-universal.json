@@ -23,7 +23,8 @@
       {
         "tag": "remote",
         "type": "tls",
-        "server": "8.8.8.8"
+        "server": "8.8.8.8",
+        "detour": "Proxy"
       },
       {
         "tag": "local",
@@ -46,6 +47,11 @@
         "clash_mode": "global",
         "action": "route",
         "server": "remote"
+      },
+      {
+        "domain_suffix": [".arpa", "local"],
+        "action": "route",
+        "server": "local"
       },
       {
         "domain_suffix": [".ts.net"],
@@ -240,35 +246,35 @@
         "type": "remote",
         "format": "binary",
         "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/category-ads-all.srs",
-        "download_detour": "direct"
+        "download_detour": "Proxy"
       },
       {
         "tag": "geosite-openai",
         "type": "remote",
         "format": "binary",
         "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/openai.srs",
-        "download_detour": "direct"
+        "download_detour": "Proxy"
       },
       {
         "tag": "geosite-anthropic",
         "type": "remote",
         "format": "binary",
         "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/anthropic.srs",
-        "download_detour": "direct"
+        "download_detour": "Proxy"
       },
       {
         "tag": "geoip-cn",
         "type": "remote",
         "format": "binary",
         "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geoip/cn.srs",
-        "download_detour": "direct"
+        "download_detour": "Proxy"
       },
       {
         "tag": "geosite-cn",
         "type": "remote",
         "format": "binary",
         "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/cn.srs",
-        "download_detour": "direct"
+        "download_detour": "Proxy"
       }
     ]
   }
