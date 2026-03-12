@@ -22,7 +22,8 @@
       {
         "tag": "proxyDns",
         "type": "tls",
-        "server": "8.8.8.8"
+        "server": "8.8.8.8",
+        "detour": "proxy"
       },
       {
         "tag": "localDns",
@@ -40,6 +41,11 @@
         "clash_mode": "global",
         "action": "route",
         "server": "proxyDns"
+      },
+      {
+        "domain_suffix": [".arpa", "local"],
+        "action": "route",
+        "server": "localDns"
       }
     ]
   },
@@ -137,7 +143,7 @@
         "type": "remote",
         "format": "binary",
         "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/category-ads-all.srs",
-        "download_detour": "direct"
+        "download_detour": "proxy"
       }
     ],
     "default_domain_resolver": {
