@@ -435,8 +435,14 @@ def pro_node_template(data_nodes, config_outbound, group):
 def combin_to_config(config, data):
     config_outbounds = config["outbounds"] if config.get("outbounds") else None
     i = 0
+    seen_subgroups = {}
     for group in data:
         if 'subgroup' in group:
+            subgroup_tag = (group.rsplit("-", 1)[0]).rsplit("-", 1)[-1]
+            if subgroup_tag in seen_subgroups:
+                # 已存在同名 subgroup，直接追加节点到已有 selector
+                seen_subgroups[subgroup_tag]["outbounds"].append('{' + group + '}')
+                continue
             i += 1
             for out in config_outbounds:
                 if out.get("outbounds"):
@@ -444,12 +450,13 @@ def combin_to_config(config, data):
                         out["outbounds"] = [out["outbounds"]] if isinstance(out["outbounds"], str) else out["outbounds"]
                         if '{all}' in out["outbounds"]:
                             index_of_all = out["outbounds"].index('{all}')
-                            out["outbounds"][index_of_all] = (group.rsplit("-", 1)[0]).rsplit("-", 1)[-1]
+                            out["outbounds"][index_of_all] = subgroup_tag
                             i += 1
                         else:
-                            out["outbounds"].insert(i, (group.rsplit("-", 1)[0]).rsplit("-", 1)[-1])
-            new_outbound = {'tag': (group.rsplit("-", 1)[0]).rsplit("-", 1)[-1], 'type': 'selector', 'outbounds': ['{' + group + '}']}
+                            out["outbounds"].insert(i, subgroup_tag)
+            new_outbound = {'tag': subgroup_tag, 'type': 'selector', 'outbounds': ['{' + group + '}']}
             config_outbounds.insert(-2, new_outbound)
+            seen_subgroups[subgroup_tag] = new_outbound
             if 'subgroup' not in group:
                 for out in config_outbounds:
                     if out.get("outbounds"):
@@ -535,7 +542,34 @@ def combin_to_config(config, data):
         config = new_config
         # 更新 outbounds，移除 wireguard 类型
         config['outbounds'] = [item for item in config['outbounds'] if item.get('type') != 'wireguard']
+    inject_direct_rules(config)
     return config
+
+
+def inject_direct_rules(config):
+    if 'route' not in config or 'rules' not in config['route']:
+        return
+    rules = config['route']['rules']
+
+    def inject(field, items, extra_filter=None):
+        target = next(
+            (r for r in rules
+             if field in r and r.get('outbound') == 'direct' and (extra_filter is None or extra_filter(r))),
+            None
+        )
+        if target:
+            target[field].extend(items)
+        else:
+            first_direct = next((i for i, r in enumerate(rules) if r.get('outbound') == 'direct'), len(rules))
+            rules.insert(first_direct, {field: list(items), 'action': 'route', 'outbound': 'direct'})
+
+    direct_ips = providers.get('direct_ip', [])
+    if direct_ips:
+        inject('ip_cidr', direct_ips, extra_filter=lambda r: 'port' not in r)
+
+    direct_domains = providers.get('direct_domain', [])
+    if direct_domains:
+        inject('domain', direct_domains)
 
 
 def updateLocalConfig(local_host, path):

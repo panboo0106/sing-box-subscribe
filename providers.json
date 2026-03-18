@@ -1,31 +1,31 @@
 {
-    "subscribes":[
-        {
-            "url": "URL",
-            "tag": "tag_1",
-            "enabled": true,
-            "emoji": 1,
-            "subgroup": "",
-            "prefix": "",
-            "User-Agent":"v2rayng"
-        },
-        {
-            "url": "URL",
-            "tag": "tag_2",
-            "enabled": false,
-            "emoji": 0,
-            "subgroup": "命名/named",
-            "prefix": "❤️",
-            "User-Agent":"clashmeta"
-        }
-    ],
-    "auto_set_outbounds_dns":{
-        "proxy": "",
-        "direct": ""
+  "subscribes": [
+    {
+      "url": "URL",
+      "tag": "tag_1",
+      "enabled": true,
+      "emoji": 1,
+      "subgroup": "selfBuild",
+      "prefix": "",
+      "User-Agent": "v2rayng"
     },
-    "save_config_path": "./config.json",
-    "auto_backup": false,
-    "exclude_protocol":"ssr",
-    "config_template": "",
-    "Only-nodes": false
+    {
+      "url": "URL",
+      "tag": "tag_2",
+      "enabled": false,
+      "emoji": 0,
+      "subgroup": "命名/named",
+      "prefix": "❤️",
+      "User-Agent": "clashmeta"
+    }
+  ],
+  "auto_set_outbounds_dns": {
+    "proxy": "",
+    "direct": ""
+  },
+  "save_config_path": "./config.json",
+  "auto_backup": false,
+  "exclude_protocol": "ssr",
+  "config_template": "",
+  "Only-nodes": false
 }
