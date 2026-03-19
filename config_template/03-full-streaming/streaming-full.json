@@ -33,11 +33,6 @@
     ],
     "rules": [
       {
-        "rule_set": "geosite-cn",
-        "action": "route",
-        "server": "localDns"
-      },
-      {
         "clash_mode": "direct",
         "action": "route",
         "server": "localDns"
@@ -49,6 +44,11 @@
       },
       {
         "domain_suffix": [".arpa", "local"],
+        "action": "route",
+        "server": "localDns"
+      },
+      {
+        "rule_set": "geosite-cn",
         "action": "route",
         "server": "localDns"
       },
