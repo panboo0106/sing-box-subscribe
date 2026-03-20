@@ -49,7 +49,7 @@
         "server": "remote"
       },
       {
-        "domain_suffix": [".arpa", "local"],
+        "domain_suffix": [".arpa", ".local"],
         "action": "route",
         "server": "local"
       },
@@ -57,25 +57,6 @@
         "domain_suffix": [".ts.net"],
         "action": "route",
         "server": "tailscale-dns"
-      },
-      {
-        "domain": [
-          "gemini.google.com",
-          "generativelanguage.googleapis.com",
-          "aiplatform.googleapis.com",
-          "makersuite.google.com",
-          "aistudio.google.com"
-        ],
-        "action": "route",
-        "server": "remote"
-      },
-      {
-        "rule_set": [
-          "geosite-openai",
-          "geosite-anthropic"
-        ],
-        "action": "route",
-        "server": "remote"
       },
       {
         "rule_set": "geosite-cn",
@@ -101,6 +82,7 @@
       "outbounds": [
         "auto",
         "AI",
+        "Global",
         "direct"
       ]
     },
@@ -109,15 +91,42 @@
       "type": "selector",
       "outbounds": [
         "selfBuild",
-        "auto",
+        "selfBuildAuto",
         "direct"
-      ]
+      ],
+      "default": "selfBuild"
+    },
+    {
+      "tag": "selfBuildAuto",
+      "type": "urltest",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "自建|selfbuild|🏠"
+          ]
+        }
+      ],
+      "url": "http://www.gstatic.com/generate_204",
+      "interval": "10m",
+      "tolerance": 50
     },
     {
       "tag": "auto",
       "type": "urltest",
       "outbounds": [
         "{all}"
+      ],
+      "filter": [
+        {
+          "action": "exclude",
+          "keywords": [
+            "网站|地址|剩余|过期|时间|有效"
+          ]
+        }
       ],
       "url": "http://www.gstatic.com/generate_204",
       "interval": "10m",
@@ -218,7 +227,21 @@
           "generativelanguage.googleapis.com",
           "aiplatform.googleapis.com",
           "makersuite.google.com",
-          "aistudio.google.com"
+          "aistudio.google.com",
+          "alkalimakersuite-pa.clients6.google.com",
+          "alkalicore-pa.clients6.google.com",
+          "openai.com",
+          "chat.openai.com",
+          "api.openai.com",
+          "platform.openai.com",
+          "auth.openai.com",
+          "cdn.openai.com",
+          "files.oaiusercontent.com",
+          "claude.ai",
+          "api.claude.ai",
+          "anthropic.com",
+          "api.anthropic.com",
+          "console.anthropic.com"
         ],
         "action": "route",
         "outbound": "AI"
