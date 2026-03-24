@@ -34,7 +34,8 @@
       {
         "tag": "tailscale-dns",
         "type": "udp",
-        "server": "100.100.100.100"
+        "server": "100.100.100.100",
+        "detour": "ts"
       },
       {
         "tag": "fakeip",
@@ -74,7 +75,9 @@
         "server": "remote"
       },
       {
-        "domain_suffix": [".ts.net"],
+        "domain_suffix": [
+          ".ts.net"
+        ],
         "action": "route",
         "server": "tailscale-dns"
       },
@@ -106,7 +109,6 @@
       "auto_route": true,
       "strict_route": false,
       "route_exclude_address": [
-        "100.64.0.0/10",
         "192.168.1.0/24"
       ],
       "stack": "gvisor"
@@ -211,10 +213,12 @@
         "action": "sniff"
       },
       {
-        "ip_cidr": ["100.100.100.100/32"],
+        "ip_cidr": [
+          "100.100.100.100/32"
+        ],
         "port": 53,
         "action": "route",
-        "outbound": "direct"
+        "outbound": "ts"
       },
       {
         "type": "logical",
@@ -263,7 +267,7 @@
           "100.64.0.0/10"
         ],
         "action": "route",
-        "outbound": "direct"
+        "outbound": "ts"
       },
       {
         "domain": [
@@ -330,5 +334,13 @@
         "download_detour": "Proxy"
       }
     ]
-  }
+  },
+  "endpoints": [
+    {
+      "type": "tailscale",
+      "tag": "ts",
+      "state_directory": "$HOME/.config/sing-box/tailscale",
+      "detour": "selfBuildAuto"
+    }
+  ]
 }

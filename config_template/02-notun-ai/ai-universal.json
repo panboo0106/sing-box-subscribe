@@ -34,7 +34,8 @@
       {
         "tag": "tailscale-dns",
         "type": "udp",
-        "server": "100.100.100.100"
+        "server": "100.100.100.100",
+        "detour": "ts"
       }
     ],
     "rules": [
@@ -49,12 +50,17 @@
         "server": "remote"
       },
       {
-        "domain_suffix": [".arpa", ".local"],
+        "domain_suffix": [
+          ".arpa",
+          ".local"
+        ],
         "action": "route",
         "server": "local"
       },
       {
-        "domain_suffix": [".ts.net"],
+        "domain_suffix": [
+          ".ts.net"
+        ],
         "action": "route",
         "server": "tailscale-dns"
       },
@@ -67,6 +73,14 @@
     "final": "remote",
     "independent_cache": true
   },
+  "endpoints": [
+    {
+      "type": "tailscale",
+      "tag": "ts",
+      "state_directory": "$HOME/.config/sing-box/tailscale",
+      "detour": "selfBuildAuto"
+    }
+  ],
   "inbounds": [
     {
       "tag": "mixed-in",
@@ -167,10 +181,12 @@
         "action": "sniff"
       },
       {
-        "ip_cidr": ["100.100.100.100/32"],
+        "ip_cidr": [
+          "100.100.100.100/32"
+        ],
         "port": 53,
         "action": "route",
-        "outbound": "direct"
+        "outbound": "ts"
       },
       {
         "type": "logical",
@@ -219,7 +235,7 @@
           "100.64.0.0/10"
         ],
         "action": "route",
-        "outbound": "direct"
+        "outbound": "ts"
       },
       {
         "domain": [
