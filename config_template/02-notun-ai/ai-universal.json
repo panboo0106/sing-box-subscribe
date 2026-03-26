@@ -33,9 +33,9 @@
       },
       {
         "tag": "tailscale-dns",
-        "type": "udp",
-        "server": "100.100.100.100",
-        "detour": "ts"
+        "type": "tailscale",
+        "endpoint": "ts",
+        "accept_default_resolvers": false
       }
     ],
     "rules": [
@@ -77,8 +77,7 @@
     {
       "type": "tailscale",
       "tag": "ts",
-      "state_directory": "$HOME/.config/sing-box/tailscale",
-      "detour": "selfBuildAuto"
+      "state_directory": "$HOME/.config/sing-box/tailscale"
     }
   ],
   "inbounds": [
@@ -181,14 +180,6 @@
         "action": "sniff"
       },
       {
-        "ip_cidr": [
-          "100.100.100.100/32"
-        ],
-        "port": 53,
-        "action": "route",
-        "outbound": "ts"
-      },
-      {
         "type": "logical",
         "mode": "or",
         "rules": [
@@ -232,7 +223,8 @@
       },
       {
         "ip_cidr": [
-          "100.64.0.0/10"
+          "100.64.0.0/10",
+          "fd7a:115c:a1e0::/48"
         ],
         "action": "route",
         "outbound": "ts"
@@ -284,36 +276,36 @@
         "tag": "geosite-category-ads-all",
         "type": "remote",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/category-ads-all.srs",
-        "download_detour": "Proxy"
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/category-ads-all.srs",
+        "download_detour": "direct"
       },
       {
         "tag": "geosite-openai",
         "type": "remote",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/openai.srs",
-        "download_detour": "Proxy"
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/openai.srs",
+        "download_detour": "direct"
       },
       {
         "tag": "geosite-anthropic",
         "type": "remote",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/anthropic.srs",
-        "download_detour": "Proxy"
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/anthropic.srs",
+        "download_detour": "direct"
       },
       {
         "tag": "geoip-cn",
         "type": "remote",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geoip/cn.srs",
-        "download_detour": "Proxy"
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geoip/cn.srs",
+        "download_detour": "direct"
       },
       {
         "tag": "geosite-cn",
         "type": "remote",
         "format": "binary",
-        "url": "https://raw.githubusercontent.com/MetaCubeX/meta-rules-dat/sing/geo/geosite/cn.srs",
-        "download_detour": "Proxy"
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/cn.srs",
+        "download_detour": "direct"
       }
     ]
   }
