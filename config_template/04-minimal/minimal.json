@@ -1,6 +1,6 @@
 {
   "log": {
-    "level": "debug",
+    "level": "info",
     "timestamp": true
   },
   "experimental": {
@@ -8,13 +8,14 @@
       "external_controller": "127.0.0.1:9090",
       "external_ui": "ui",
       "secret": "",
-      "external_ui_download_url": "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip",
+      "external_ui_download_url": "https://gh-proxy.com/https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip",
       "external_ui_download_detour": "direct",
       "default_mode": "rule"
     },
     "cache_file": {
       "enabled": true,
-      "store_fakeip": false
+      "store_fakeip": false,
+      "store_rdrc": true
     }
   },
   "dns": {
@@ -46,16 +47,22 @@
         "domain_suffix": [".arpa", ".local"],
         "action": "route",
         "server": "localDns"
+      },
+      {
+        "rule_set": "geosite-cn",
+        "action": "route",
+        "server": "localDns"
       }
     ],
-    "final": "localDns"
+    "final": "proxyDns",
+    "independent_cache": true
   },
   "inbounds": [
     {
       "tag": "mixed-in",
       "type": "mixed",
       "listen": "127.0.0.1",
-      "listen_port": 2080
+      "listen_port": 7890
     }
   ],
   "outbounds": [
@@ -129,6 +136,14 @@
         ],
         "action": "route",
         "outbound": "direct"
+      },
+      {
+        "rule_set": [
+          "geoip-cn",
+          "geosite-cn"
+        ],
+        "action": "route",
+        "outbound": "direct"
       }
     ],
     "rule_set": [
@@ -137,6 +152,20 @@
         "type": "remote",
         "format": "binary",
         "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/category-ads-all.srs",
+        "download_detour": "direct"
+      },
+      {
+        "tag": "geoip-cn",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geoip/cn.srs",
+        "download_detour": "direct"
+      },
+      {
+        "tag": "geosite-cn",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/cn.srs",
         "download_detour": "direct"
       }
     ],

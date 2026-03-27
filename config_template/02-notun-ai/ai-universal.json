@@ -59,10 +59,61 @@
       },
       {
         "domain_suffix": [
-          ".ts.net"
+          ".ts.net",
+          ".tailscale.net"
         ],
         "action": "route",
         "server": "tailscale-dns"
+      },
+      {
+        "domain_suffix": [
+          ".tailscale.com",
+          ".tailscale.io"
+        ],
+        "action": "route",
+        "server": "local"
+      },
+      {
+        "domain": [
+          "gemini.google.com",
+          "generativelanguage.googleapis.com",
+          "aiplatform.googleapis.com",
+          "makersuite.google.com",
+          "aistudio.google.com",
+          "alkalimakersuite-pa.clients6.google.com",
+          "alkalicore-pa.clients6.google.com",
+          "openai.com",
+          "chat.openai.com",
+          "api.openai.com",
+          "platform.openai.com",
+          "auth.openai.com",
+          "cdn.openai.com",
+          "files.oaiusercontent.com",
+          "claude.ai",
+          "api.claude.ai",
+          "anthropic.com",
+          "api.anthropic.com",
+          "console.anthropic.com",
+          "perplexity.ai",
+          "copilot.microsoft.com",
+          "sydney.bing.com",
+          "chat.deepseek.com",
+          "api.deepseek.com",
+          "gateway.ai.cloudflare.com"
+        ],
+        "action": "route",
+        "server": "remote"
+      },
+      {
+        "rule_set": [
+          "geosite-openai",
+          "geosite-anthropic",
+          "geosite-google-gemini",
+          "geosite-perplexity",
+          "geosite-copilot"
+        ],
+        "action": "route",
+        "server": "remote"
       },
       {
         "rule_set": "geosite-cn",
@@ -217,17 +268,33 @@
         "outbound": "direct"
       },
       {
-        "ip_is_private": true,
-        "action": "route",
-        "outbound": "direct"
-      },
-      {
         "ip_cidr": [
           "100.64.0.0/10",
           "fd7a:115c:a1e0::/48"
         ],
         "action": "route",
         "outbound": "ts"
+      },
+      {
+        "domain_suffix": [
+          ".ts.net",
+          ".tailscale.net"
+        ],
+        "action": "route",
+        "outbound": "ts"
+      },
+      {
+        "domain_suffix": [
+          ".tailscale.com",
+          ".tailscale.io"
+        ],
+        "action": "route",
+        "outbound": "direct"
+      },
+      {
+        "ip_is_private": true,
+        "action": "route",
+        "outbound": "direct"
       },
       {
         "domain": [
@@ -249,7 +316,13 @@
           "api.claude.ai",
           "anthropic.com",
           "api.anthropic.com",
-          "console.anthropic.com"
+          "console.anthropic.com",
+          "perplexity.ai",
+          "copilot.microsoft.com",
+          "sydney.bing.com",
+          "chat.deepseek.com",
+          "api.deepseek.com",
+          "gateway.ai.cloudflare.com"
         ],
         "action": "route",
         "outbound": "AI"
@@ -257,7 +330,10 @@
       {
         "rule_set": [
           "geosite-openai",
-          "geosite-anthropic"
+          "geosite-anthropic",
+          "geosite-google-gemini",
+          "geosite-perplexity",
+          "geosite-copilot"
         ],
         "action": "route",
         "outbound": "AI"
@@ -291,6 +367,27 @@
         "type": "remote",
         "format": "binary",
         "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/anthropic.srs",
+        "download_detour": "direct"
+      },
+      {
+        "tag": "geosite-google-gemini",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/google-gemini.srs",
+        "download_detour": "direct"
+      },
+      {
+        "tag": "geosite-perplexity",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/perplexity.srs",
+        "download_detour": "direct"
+      },
+      {
+        "tag": "geosite-copilot",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/copilot.srs",
         "download_detour": "direct"
       },
       {

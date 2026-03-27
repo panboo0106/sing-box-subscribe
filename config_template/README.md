@@ -7,10 +7,12 @@
 ```
 config_template/
 ├── 01-tun-ai/           # TUN 模式 + AI 专用路由（推荐）
-│   └── ai-universal.json
+│   ├── ai-universal.json          # 含 Tailscale 支持
+│   └── ai-universal-no-ts.json   # 无 Tailscale 版本
 ├── 02-notun-ai/         # NoTUN 模式 + AI 专用路由
-│   ├── ai-universal.json      # 简洁版
-│   └── ai-global.json         # 多地区分组版
+│   ├── ai-universal.json          # 简洁版（含 Tailscale）
+│   ├── ai-universal-no-ts.json   # 简洁版（无 Tailscale）
+│   └── ai-global.json            # 多地区分组版（含 Tailscale）
 ├── 03-full-streaming/   # 完整流媒体分流
 │   └── streaming-full.json
 ├── 04-minimal/          # 极简配置
@@ -24,7 +26,7 @@ config_template/
 
 | 你的需求 | 推荐模板 | 路径 |
 |---------|---------|------|
-| **手机/电脑全局代理**，AI 走自建节点 | `ai-universal.json` | `01-tun-ai/` |
+| **全局代理 + Tailscale 远程办公** | `ai-universal.json` | `01-tun-ai/` |
 | **只代理浏览器/特定应用**，简洁配置 | `ai-universal.json` | `02-notun-ai/` |
 | **只代理浏览器**，需要多地区分组 | `ai-global.json` | `02-notun-ai/` |
 | **需要 Netflix/Disney 等流媒体分流** | `streaming-full.json` | `03-full-streaming/` |
@@ -44,7 +46,9 @@ config_template/
 - macOS / iOS / Android / Windows / Linux
 - 需要全局代理（所有应用自动走代理）
 - AI 服务需要指定节点（如美国、日本、新加坡）
-- 有 Tailscale 网络需求
+- 外出办公需要通过 Tailscale 连回家里（SSH、NAS、远程桌面等）
+
+> **提示**: Tailscale endpoint 独立于代理模式工作。TUN 和 NoTUN 模板均支持 Tailscale 远程访问。区别仅在于代理方式：TUN 全局自动代理，NoTUN 需要为应用单独设置代理。
 
 **分组结构**:
 
@@ -279,7 +283,7 @@ FakeIP 是一种 DNS 优化技术：
 ## sing-box 版本兼容性
 
 - **最低版本**: v1.12.0
-- **推荐版本**: v1.12.22 (当前最新稳定版)
+- **推荐版本**: v1.13.3 (当前最新稳定版)
 
 ---
 

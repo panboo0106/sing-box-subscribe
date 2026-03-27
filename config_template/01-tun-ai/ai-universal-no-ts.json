@@ -32,12 +32,6 @@
         "server": "223.5.5.5"
       },
       {
-        "tag": "tailscale-dns",
-        "type": "udp",
-        "server": "100.100.100.100",
-        "detour": "direct"
-      },
-      {
         "tag": "fakeip",
         "type": "fakeip",
         "inet4_range": "198.18.0.0/15",
@@ -64,13 +58,6 @@
         "server": "local"
       },
       {
-        "domain_suffix": [
-          ".ts.net"
-        ],
-        "action": "route",
-        "server": "tailscale-dns"
-      },
-      {
         "domain": [
           "gemini.google.com",
           "generativelanguage.googleapis.com",
@@ -90,7 +77,24 @@
           "api.claude.ai",
           "anthropic.com",
           "api.anthropic.com",
-          "console.anthropic.com"
+          "console.anthropic.com",
+          "perplexity.ai",
+          "copilot.microsoft.com",
+          "sydney.bing.com",
+          "chat.deepseek.com",
+          "api.deepseek.com",
+          "gateway.ai.cloudflare.com"
+        ],
+        "action": "route",
+        "server": "remote"
+      },
+      {
+        "rule_set": [
+          "geosite-openai",
+          "geosite-anthropic",
+          "geosite-google-gemini",
+          "geosite-perplexity",
+          "geosite-copilot"
         ],
         "action": "route",
         "server": "remote"
@@ -122,11 +126,6 @@
       ],
       "auto_route": true,
       "strict_route": false,
-      "route_exclude_address": [
-        "192.168.1.0/24",
-        "100.64.0.0/10",
-        "fd7a:115c:a1e0::/48"
-      ],
       "stack": "gvisor"
     },
     {
@@ -290,7 +289,13 @@
           "api.claude.ai",
           "anthropic.com",
           "api.anthropic.com",
-          "console.anthropic.com"
+          "console.anthropic.com",
+          "perplexity.ai",
+          "copilot.microsoft.com",
+          "sydney.bing.com",
+          "chat.deepseek.com",
+          "api.deepseek.com",
+          "gateway.ai.cloudflare.com"
         ],
         "action": "route",
         "outbound": "AI"
@@ -298,7 +303,10 @@
       {
         "rule_set": [
           "geosite-openai",
-          "geosite-anthropic"
+          "geosite-anthropic",
+          "geosite-google-gemini",
+          "geosite-perplexity",
+          "geosite-copilot"
         ],
         "action": "route",
         "outbound": "AI"
@@ -332,6 +340,27 @@
         "type": "remote",
         "format": "binary",
         "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/anthropic.srs",
+        "download_detour": "direct"
+      },
+      {
+        "tag": "geosite-google-gemini",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/google-gemini.srs",
+        "download_detour": "direct"
+      },
+      {
+        "tag": "geosite-perplexity",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/perplexity.srs",
+        "download_detour": "direct"
+      },
+      {
+        "tag": "geosite-copilot",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/copilot.srs",
         "download_detour": "direct"
       },
       {

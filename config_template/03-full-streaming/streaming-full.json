@@ -14,7 +14,7 @@
     },
     "cache_file": {
       "enabled": true,
-      "store_fakeip": false,
+      "store_fakeip": true,
       "store_rdrc": true
     }
   },
@@ -30,6 +30,12 @@
         "tag": "localDns",
         "type": "https",
         "server": "223.5.5.5"
+      },
+      {
+        "tag": "fakeip",
+        "type": "fakeip",
+        "inet4_range": "198.18.0.0/15",
+        "inet6_range": "fc00::/18"
       }
     ],
     "rules": [
@@ -57,9 +63,18 @@
         "rule_set": "geosite-geolocation-!cn",
         "action": "route",
         "server": "proxyDns"
+      },
+      {
+        "query_type": [
+          "A",
+          "AAAA"
+        ],
+        "action": "route",
+        "server": "fakeip"
       }
     ],
-    "final": "localDns"
+    "final": "proxyDns",
+    "independent_cache": true
   },
   "inbounds": [
     {
@@ -444,7 +459,7 @@
       {
         "clash_mode": "global",
         "action": "route",
-        "outbound": "Proxy"
+        "outbound": "Global"
       },
       {
         "domain": [
@@ -536,11 +551,15 @@
       {
         "rule_set": [
           "geoip-apple",
-          "geosite-apple",
-          "geosite-amazon"
+          "geosite-apple"
         ],
         "action": "route",
         "outbound": "Apple"
+      },
+      {
+        "rule_set": "geosite-amazon",
+        "action": "route",
+        "outbound": "Streaming"
       },
       {
         "rule_set": "geosite-microsoft",

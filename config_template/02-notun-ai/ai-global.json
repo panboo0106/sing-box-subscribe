@@ -59,10 +59,19 @@
       },
       {
         "domain_suffix": [
-          ".ts.net"
+          ".ts.net",
+          ".tailscale.net"
         ],
         "action": "route",
         "server": "tailscale-dns"
+      },
+      {
+        "domain_suffix": [
+          ".tailscale.com",
+          ".tailscale.io"
+        ],
+        "action": "route",
+        "server": "local"
       },
       {
         "domain": [
@@ -71,8 +80,26 @@
           "aiplatform.googleapis.com",
           "makersuite.google.com",
           "aistudio.google.com",
+          "alkalimakersuite-pa.clients6.google.com",
           "alkalicore-pa.clients6.google.com",
-          "alkalimakersuite-pa.clients6.google.com"
+          "openai.com",
+          "chat.openai.com",
+          "api.openai.com",
+          "platform.openai.com",
+          "auth.openai.com",
+          "cdn.openai.com",
+          "files.oaiusercontent.com",
+          "claude.ai",
+          "api.claude.ai",
+          "anthropic.com",
+          "api.anthropic.com",
+          "console.anthropic.com",
+          "perplexity.ai",
+          "copilot.microsoft.com",
+          "sydney.bing.com",
+          "chat.deepseek.com",
+          "api.deepseek.com",
+          "gateway.ai.cloudflare.com"
         ],
         "action": "route",
         "server": "remote"
@@ -294,10 +321,6 @@
     {
       "tag": "direct",
       "type": "direct"
-    },
-    {
-      "tag": "block",
-      "type": "block"
     }
   ],
   "route": {
@@ -352,20 +375,12 @@
         "outbound": "direct"
       },
       {
-        "ip_is_private": true,
-        "action": "route",
-        "outbound": "direct"
-      },
-      {
         "ip_cidr": [
           "100.64.0.0/10",
-          "fd7a:115c:a1e0::/48",
-          "10.0.0.0/8",
-          "172.16.0.0/12",
-          "192.168.0.0/16"
+          "fd7a:115c:a1e0::/48"
         ],
-        "outbound": "ts",
-        "action": "route"
+        "action": "route",
+        "outbound": "ts"
       },
       {
         "domain_suffix": [
@@ -374,6 +389,19 @@
         ],
         "action": "route",
         "outbound": "ts"
+      },
+      {
+        "domain_suffix": [
+          ".tailscale.com",
+          ".tailscale.io"
+        ],
+        "action": "route",
+        "outbound": "direct"
+      },
+      {
+        "ip_is_private": true,
+        "action": "route",
+        "outbound": "direct"
       },
       {
         "domain": [
