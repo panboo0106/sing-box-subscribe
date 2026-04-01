@@ -99,8 +99,7 @@
           "geosite-openai",
           "geosite-anthropic",
           "geosite-google-gemini",
-          "geosite-perplexity",
-          "geosite-copilot"
+          "geosite-perplexity"
         ],
         "action": "route",
         "server": "remote"
@@ -354,8 +353,7 @@
           "geosite-openai",
           "geosite-anthropic",
           "geosite-google-gemini",
-          "geosite-perplexity",
-          "geosite-copilot"
+          "geosite-perplexity"
         ],
         "action": "route",
         "outbound": "AI"
@@ -403,13 +401,6 @@
         "type": "remote",
         "format": "binary",
         "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/perplexity.srs",
-        "download_detour": "direct"
-      },
-      {
-        "tag": "geosite-copilot",
-        "type": "remote",
-        "format": "binary",
-        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/copilot.srs",
         "download_detour": "direct"
       },
       {
