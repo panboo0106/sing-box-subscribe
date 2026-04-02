@@ -71,7 +71,7 @@
           ".tailscale.io"
         ],
         "action": "route",
-        "server": "local"
+        "server": "remote"
       },
       {
         "domain": [
@@ -395,7 +395,7 @@
           ".tailscale.io"
         ],
         "action": "route",
-        "outbound": "direct"
+        "outbound": "Proxy"
       },
       {
         "ip_is_private": true,
@@ -508,7 +508,9 @@
     {
       "type": "tailscale",
       "tag": "ts",
-      "state_directory": "$HOME/.config/sing-box/tailscale"
+      "state_directory": "$HOME/.config/sing-box/tailscale",
+      "auth_key": "$TS_AUTHKEY",
+      "detour": "auto"
     }
   ]
 }

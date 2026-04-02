@@ -27,5 +27,6 @@
   "auto_backup": false,
   "exclude_protocol": "ssr",
   "config_template": "",
-  "Only-nodes": false
+  "Only-nodes": false,
+  "ts_authkey": ""
 }

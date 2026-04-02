@@ -321,6 +321,22 @@ def get_content_form_file(url):
         return data
 
 
+def _replace_var(obj, var_name, var_value):
+    """递归替换配置中所有字符串值的变量"""
+    if isinstance(obj, dict):
+        for key in obj:
+            if isinstance(obj[key], str) and var_name in obj[key]:
+                obj[key] = obj[key].replace(var_name, var_value)
+            elif isinstance(obj[key], (dict, list)):
+                _replace_var(obj[key], var_name, var_value)
+    elif isinstance(obj, list):
+        for i, item in enumerate(obj):
+            if isinstance(item, str) and var_name in item:
+                obj[i] = item.replace(var_name, var_value)
+            elif isinstance(item, (dict, list)):
+                _replace_var(item, var_name, var_value)
+
+
 def save_config(path, nodes):
     try:
         if 'auto_backup' in providers and providers['auto_backup']:
@@ -675,5 +691,9 @@ if __name__ == '__main__':
         final_config = combined_contents  # 只返回节点信息
     else:
         final_config = combin_to_config(config, nodes)  # 节点信息添加到模板
+    # 替换 $TS_AUTHKEY 变量
+    ts_authkey = providers.get('ts_authkey', '')
+    if ts_authkey:
+        _replace_var(final_config, '$TS_AUTHKEY', ts_authkey)
     save_config(providers["save_config_path"], final_config)
     # updateLocalConfig('http://127.0.0.1:9090',providers['save_config_path'])
