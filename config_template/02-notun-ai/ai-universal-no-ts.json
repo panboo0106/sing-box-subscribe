@@ -71,12 +71,11 @@
           "api.claude.ai",
           "anthropic.com",
           "api.anthropic.com",
+          "statsig.anthropic.com",
           "console.anthropic.com",
           "perplexity.ai",
           "copilot.microsoft.com",
           "sydney.bing.com",
-          "chat.deepseek.com",
-          "api.deepseek.com",
           "gateway.ai.cloudflare.com"
         ],
         "action": "route",
@@ -115,6 +114,8 @@
       "type": "selector",
       "outbounds": [
         "auto",
+        "selfBuild",
+        "selfBuildAuto",
         "AI",
         "Global",
         "direct"
@@ -147,6 +148,21 @@
       "url": "http://www.gstatic.com/generate_204",
       "interval": "10m",
       "tolerance": 50
+    },
+    {
+      "tag": "selfBuild",
+      "type": "selector",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "自建|selfbuild|🏠"
+          ]
+        }
+      ]
     },
     {
       "tag": "auto",
@@ -262,12 +278,11 @@
           "api.claude.ai",
           "anthropic.com",
           "api.anthropic.com",
+          "statsig.anthropic.com",
           "console.anthropic.com",
           "perplexity.ai",
           "copilot.microsoft.com",
           "sydney.bing.com",
-          "chat.deepseek.com",
-          "api.deepseek.com",
           "gateway.ai.cloudflare.com"
         ],
         "action": "route",

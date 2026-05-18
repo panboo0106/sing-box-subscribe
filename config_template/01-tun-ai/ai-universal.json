@@ -64,6 +64,22 @@
         "server": "local"
       },
       {
+        "domain_suffix": [
+          ".ts.net",
+          ".tailscale.net"
+        ],
+        "action": "route",
+        "server": "tailscale-dns"
+      },
+      {
+        "domain_suffix": [
+          ".tailscale.com",
+          ".tailscale.io"
+        ],
+        "action": "route",
+        "server": "remote"
+      },
+      {
         "domain": [
           "gemini.google.com",
           "generativelanguage.googleapis.com",
@@ -83,12 +99,11 @@
           "api.claude.ai",
           "anthropic.com",
           "api.anthropic.com",
+          "statsig.anthropic.com",
           "console.anthropic.com",
           "perplexity.ai",
           "copilot.microsoft.com",
           "sydney.bing.com",
-          "chat.deepseek.com",
-          "api.deepseek.com",
           "gateway.ai.cloudflare.com"
         ],
         "action": "route",
@@ -100,22 +115,6 @@
           "geosite-anthropic",
           "geosite-google-gemini",
           "geosite-perplexity"
-        ],
-        "action": "route",
-        "server": "remote"
-      },
-      {
-        "domain_suffix": [
-          ".ts.net",
-          ".tailscale.net"
-        ],
-        "action": "route",
-        "server": "tailscale-dns"
-      },
-      {
-        "domain_suffix": [
-          ".tailscale.com",
-          ".tailscale.io"
         ],
         "action": "route",
         "server": "remote"
@@ -148,7 +147,9 @@
       "auto_route": true,
       "strict_route": false,
       "route_exclude_address": [
-        "192.168.1.0/24"
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16"
       ],
       "stack": "gvisor"
     },
@@ -165,6 +166,8 @@
       "type": "selector",
       "outbounds": [
         "auto",
+        "selfBuild",
+        "selfBuildAuto",
         "AI",
         "Global",
         "direct"
@@ -197,6 +200,21 @@
       "url": "http://www.gstatic.com/generate_204",
       "interval": "10m",
       "tolerance": 50
+    },
+    {
+      "tag": "selfBuild",
+      "type": "selector",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "自建|selfbuild|🏠"
+          ]
+        }
+      ]
     },
     {
       "tag": "auto",
@@ -337,12 +355,11 @@
           "api.claude.ai",
           "anthropic.com",
           "api.anthropic.com",
+          "statsig.anthropic.com",
           "console.anthropic.com",
           "perplexity.ai",
           "copilot.microsoft.com",
           "sydney.bing.com",
-          "chat.deepseek.com",
-          "api.deepseek.com",
           "gateway.ai.cloudflare.com"
         ],
         "action": "route",
@@ -425,7 +442,7 @@
       "tag": "ts",
       "state_directory": "$HOME/.config/sing-box/tailscale",
       "auth_key": "$TS_AUTHKEY",
-      "detour": "auto"
+      "detour": "selfBuildAuto"
     }
   ]
 }

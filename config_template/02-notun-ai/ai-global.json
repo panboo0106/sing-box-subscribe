@@ -93,12 +93,11 @@
           "api.claude.ai",
           "anthropic.com",
           "api.anthropic.com",
+          "statsig.anthropic.com",
           "console.anthropic.com",
           "perplexity.ai",
           "copilot.microsoft.com",
           "sydney.bing.com",
-          "chat.deepseek.com",
-          "api.deepseek.com",
           "gateway.ai.cloudflare.com"
         ],
         "action": "route",
@@ -153,17 +152,17 @@
       "tag": "AI",
       "type": "selector",
       "outbounds": [
-        "SelfBuild",
-        "SelfBuildAuto",
+        "selfBuild",
+        "selfBuildAuto",
         "US",
         "JP",
         "SG",
         "direct"
       ],
-      "default": "SelfBuild"
+      "default": "selfBuild"
     },
     {
-      "tag": "SelfBuildAuto",
+      "tag": "selfBuildAuto",
       "type": "urltest",
       "outbounds": [
         "{all}"
@@ -184,7 +183,7 @@
       "tag": "Global",
       "type": "selector",
       "outbounds": [
-        "SelfBuild",
+        "selfBuild",
         "HK",
         "TW",
         "SG",
@@ -195,7 +194,7 @@
       ]
     },
     {
-      "tag": "SelfBuild",
+      "tag": "selfBuild",
       "type": "selector",
       "outbounds": [
         "{all}"
@@ -411,7 +410,6 @@
           "aistudio.google.com",
           "alkalicore-pa.clients6.google.com",
           "alkalimakersuite-pa.clients6.google.com",
-          "gateway.ai.cloudflare.com",
           "openai.com",
           "chat.openai.com",
           "api.openai.com",
@@ -423,12 +421,12 @@
           "api.claude.ai",
           "anthropic.com",
           "api.anthropic.com",
+          "statsig.anthropic.com",
           "console.anthropic.com",
           "perplexity.ai",
           "copilot.microsoft.com",
           "sydney.bing.com",
-          "chat.deepseek.com",
-          "api.deepseek.com"
+          "gateway.ai.cloudflare.com"
         ],
         "action": "route",
         "outbound": "AI"
@@ -510,7 +508,7 @@
       "tag": "ts",
       "state_directory": "$HOME/.config/sing-box/tailscale",
       "auth_key": "$TS_AUTHKEY",
-      "detour": "auto"
+      "detour": "selfBuildAuto"
     }
   ]
 }
