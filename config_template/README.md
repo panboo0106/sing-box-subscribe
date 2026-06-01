@@ -1,210 +1,151 @@
 # sing-box 配置模板
 
-本目录包含兼容 sing-box v1.12+ 的配置模板，按使用场景分类整理。
+兼容 sing-box **v1.12+** 的配置模板，按"路由风味（routing flavor）"分层，文件名表达 inbound 类型和平台。
 
-## 目录结构
+---
+
+## 目录布局
 
 ```
 config_template/
-├── 01-tun-ai/           # TUN 模式 + AI 专用路由（推荐）
-│   ├── ai-universal.json          # Android 专用（内置 Tailscale endpoint）
-│   └── ai-universal-no-ts.json   # macOS 专用（配合官方 Tailscale 客户端）
-├── 02-notun-ai/         # NoTUN 模式 + AI 专用路由
-│   ├── ai-universal.json          # 含 Tailscale endpoint
-│   ├── ai-universal-no-ts.json   # 无 Tailscale
-│   └── ai-global.json            # 多地区分组版（含 Tailscale endpoint）
-├── 03-full-streaming/   # 完整流媒体分流
-│   └── streaming-full.json
-├── 04-minimal/          # 极简配置
-│   └── minimal.json
+├── ai/                      # AI 服务优先路由（Claude / OpenAI / Gemini / Perplexity / Copilot）
+│   ├── tun-android.json     # TUN + 内置 Tailscale endpoint
+│   ├── tun-macos.json       # TUN + 外部 Tailscale 客户端共存
+│   ├── tun-linux.json       # TUN + auto_redirect + system stack（Linux 桌面/服务器最佳性能）
+│   ├── mixed.json           # Mixed inbound（HTTP/SOCKS5），无 Tailscale
+│   ├── mixed-ts.json        # Mixed inbound + 内置 Tailscale endpoint
+│   └── mixed-global.json    # Mixed inbound + 多地区分组（HK/TW/SG/JP/US/Others）+ 内置 Tailscale
+├── streaming/               # 完整流媒体分流（Netflix/Disney+/YouTube/...）
+│   ├── tun.json             # TUN + FakeIP，通用
+│   └── tun-linux.json       # 同上 + auto_redirect + system stack
+├── minimal/                 # 极简（仅 Proxy / auto / direct）
+│   └── mixed.json           # Mixed inbound
 └── README.md
 ```
 
+> ⚠️ **路径迁移**：旧的 `01-tun-ai/` `02-notun-ai/` `03-full-streaming/` `04-minimal/` 目录已经统一重组。若旧 URL 仍被引用，请按下表更新。
+
+| 旧路径 | 新路径 |
+|---|---|
+| `01-tun-ai/ai-universal.json` | `ai/tun-android.json` |
+| `01-tun-ai/ai-universal-no-ts.json` | `ai/tun-macos.json` |
+| `02-notun-ai/ai-universal.json` | `ai/mixed-ts.json` |
+| `02-notun-ai/ai-universal-no-ts.json` | `ai/mixed.json` |
+| `02-notun-ai/ai-global.json` | `ai/mixed-global.json` |
+| `03-full-streaming/streaming-full.json` | `streaming/tun.json` |
+| `04-minimal/minimal.json` | `minimal/mixed.json` |
+
 ---
 
-## 平台推荐
+## 命名约定
 
-| 平台 | 推荐模板 | Tailscale 方案 |
-|------|---------|---------------|
-| **Android** | `01-tun-ai/ai-universal.json` | sing-box 内置 endpoint，统一管理 |
-| **macOS** | `01-tun-ai/ai-universal-no-ts.json` | 官方 Tailscale 客户端 + sing-box 共存 |
-| **iPhone (iOS)** | `01-tun-ai/ai-universal-no-ts.json` | iOS 只能同时跑一个 VPN，用快捷指令切换 |
-| **仅浏览器代理** | `02-notun-ai/ai-universal.json` | 含 Tailscale endpoint，无 TUN |
-| **多地区节点** | `02-notun-ai/ai-global.json` | 含 Tailscale endpoint，按地区分组 |
-| **流媒体解锁** | `03-full-streaming/streaming-full.json` | 无 Tailscale |
-| **测试/低端设备** | `04-minimal/minimal.json` | 无 Tailscale |
+文件名 = `<inbound>-<平台>` 或单 `<inbound>`：
+
+- **inbound 维度**：`tun`（TUN+Mixed 双入站）/ `mixed`（仅 HTTP/SOCKS5）
+- **平台后缀**：
+  - `tun-android.json` — Android（含内置 TS endpoint）
+  - `tun-macos.json` — macOS / iOS / Windows（外部 Tailscale，gvisor）
+  - `tun-linux.json` — Linux 桌面/服务器（`auto_redirect: true` + `stack: system`）
+  - 无后缀（如 `mixed.json`）= 跨平台通用
+- **Tailscale 标记**：`-ts` 后缀代表内置 sing-box Tailscale endpoint；无 `-ts` 代表用外部 Tailscale 客户端或不使用 Tailscale
+- **特殊用途**：`mixed-global` 代表多地区分组
+
+---
+
+## 平台 → 模板速查
+
+| 平台 | 推荐 | 备注 |
+|------|------|------|
+| **Android** | `ai/tun-android.json` | 内置 Tailscale endpoint，统一管理 |
+| **macOS** | `ai/tun-macos.json` | 配合官方 Tailscale 客户端，NAT 穿透更稳 |
+| **iOS** | `ai/tun-macos.json` | iOS 同时只能跑一个 VPN，用快捷指令切换 |
+| **Windows** | `ai/tun-macos.json` | 同 macOS 逻辑（不依赖 macOS 特有字段） |
+| **Linux 桌面/服务器** | `ai/tun-linux.json` | `auto_redirect` + nftables 高性能转发 |
+| **仅浏览器代理** | `ai/mixed.json` 或 `ai/mixed-ts.json` | 配合 SwitchyOmega 等插件 |
+| **多地区分组** | `ai/mixed-global.json` | 节点多、需手动按地区选 |
+| **流媒体精细分流** | `streaming/tun.json` 或 `streaming/tun-linux.json` | ⚠️ 不含 AI 分流 |
+| **测试 / 低端设备** | `minimal/mixed.json` | 仅 Proxy/auto/direct |
 
 ### iOS 特别说明
 
-iOS 系统限制：同时只允许一个活跃 VPN（NetworkExtension）。sing-box (SFI) 和官方 Tailscale App 无法共存，建议：
-- 用 **iOS 快捷指令** 一键切换两个 App
-- 或在 VPS 上部署 Tailscale Exit Node，iPhone 只跑 Tailscale
+iOS 系统限制：同时只允许一个活跃 VPN。sing-box (SFI) 和官方 Tailscale App 无法共存：
+- 用 **iOS 快捷指令** 一键切换两个 App；或
+- 在 VPS 部署 Tailscale Exit Node，iPhone 只跑 Tailscale。
 
----
+### Linux 模板的取舍
 
-## 快速选择
-
-| 你的需求 | 推荐模板 | 路径 |
-|---------|---------|------|
-| **Android 全局代理 + 访问家庭内网** | `ai-universal.json` | `01-tun-ai/` |
-| **macOS 全局代理 + 官方 Tailscale** | `ai-universal-no-ts.json` | `01-tun-ai/` |
-| **只代理浏览器/特定应用** | `ai-universal.json` | `02-notun-ai/` |
-| **只代理浏览器，需要多地区分组** | `ai-global.json` | `02-notun-ai/` |
-| **Netflix/Disney 等流媒体分流** | `streaming-full.json` | `03-full-streaming/` |
-| **测试或低端设备** | `minimal.json` | `04-minimal/` |
-
----
-
-## 模板详解
-
-### 01. TUN 模式 - Android 专用（内置 Tailscale）
-
-**文件**: `01-tun-ai/ai-universal.json`
-
-**模式**: TUN + FakeIP + 内置 Tailscale endpoint
-
-**适用平台**: Android
-
-**Tailscale 方案**: sing-box 内置 endpoint，不需要安装官方 Tailscale App。Tailscale 流量通过路由规则 `100.64.0.0/10 → ts` 分流，**不加** `route_exclude_address` 排除 Tailscale 网段（Android 上加了会绕过 TUN，反而失效）。
-
-**分组结构**:
-
-| 分组名 | 类型 | 说明 |
-|--------|------|------|
-| `Proxy` | selector | 主选择器 |
-| `AI` | selector | AI 服务专用，默认走自建节点 |
-| `selfBuild` | selector | 手动选择自建节点 |
-| `selfBuildAuto` | urltest | 自建节点自动测速 |
-| `auto` | urltest | 全部节点自动测速 |
-| `Global` | selector | 境外网站汇总 |
-| `China` | selector | 中国网站（direct + Proxy） |
-
-**已知问题**（sing-box 内置 Tailscale 的局限）:
-- IPv4 NAT 下无法直连打洞，始终走 DERP 中继（延迟偏高）
-- auth key 约 9 天后可能失效，需重新生成；建议在 Tailscale 控制台使用可复用 Key（Reusable + No expiry）
-- 启动后需等待 `selfBuildAuto` 完成首次健康检查（约 5-15 秒），Tailscale 控制面才能正常连接
-
----
-
-### 02. TUN 模式 - macOS 专用（配合官方 Tailscale）
-
-**文件**: `01-tun-ai/ai-universal-no-ts.json`
-
-**模式**: TUN + FakeIP，**无** Tailscale endpoint
-
-**适用平台**: macOS、iOS（快捷指令切换场景）
-
-**Tailscale 方案**: 使用官方 Tailscale 客户端独立运行。TUN inbound 的 `route_exclude_address` 排除了 Tailscale 网段，让两者互不干扰：
-
+`tun-linux.json` 与 `tun-macos.json` 的区别只有 3 个字段：
 ```json
-"route_exclude_address": [
-  "192.168.0.0/16",
-  "100.64.0.0/10",
-  "fd7a:115c:a1e0::/48"
-]
+"strict_route": true,         // Linux 上推荐启用，防 DNS 泄露
+"auto_redirect": true,        // 启用 nftables 重定向，绕过 gvisor 性能瓶颈
+"stack": "system"             // 配合 auto_redirect 用 system stack
 ```
-
-**优势**: 官方客户端 NAT 穿透更强，IPv4 NAT 下可直连打洞，连接更稳定。
-
-**分组结构**:
-
-| 分组名 | 类型 | 说明 |
-|--------|------|------|
-| `Proxy` | selector | 主选择器 |
-| `AI` | selector | AI 服务专用，默认走自建节点 |
-| `selfBuild` | selector | 手动选择自建节点 |
-| `selfBuildAuto` | urltest | 自建节点自动测速 |
-| `auto` | urltest | 全部节点自动测速 |
-| `Global` | selector | 境外网站汇总 |
-| `China` | selector | 中国网站（direct + Proxy） |
-
----
-
-### 03. NoTUN 模式 - AI 通用（含 Tailscale）
-
-**文件**: `02-notun-ai/ai-universal.json`
-
-**模式**: Mixed Inbound (HTTP/SOCKS5)，无 FakeIP，内置 Tailscale endpoint
-
-**适用场景**: 只需代理浏览器，配合 SwitchyOmega 等插件
-
-**监听端口**: `7890`
-
----
-
-### 04. NoTUN 模式 - AI 全球多地区（含 Tailscale）
-
-**文件**: `02-notun-ai/ai-global.json`
-
-**模式**: Mixed Inbound (HTTP/SOCKS5)，无 FakeIP，内置 Tailscale endpoint
-
-**适用场景**: 节点较多，需要按地区手动选择
-
-**监听端口**: `7890`
-
-**额外分组**: `HK`, `TW`, `SG`, `JP`, `US`, `Others`, `China`
-
-> 与 `02-notun-ai/ai-universal.json` 一致，`China` 默认 `direct`，可在 Clash 面板手动切到 `Proxy`（临时全代理国内站时有用）。
-
----
-
-### 05. 完整流媒体分流
-
-**文件**: `03-full-streaming/streaming-full.json`
-
-**模式**: TUN + FakeIP
-
-**分组** (26个): Netflix, Disney+, YouTube, Spotify, TikTok, Telegram, Twitter, Facebook, Google, Apple, Microsoft, Games...
-
-> ⚠️ **不含 AI 分流**：此模板只覆盖 OpenAI，**没有** Claude / Gemini / Perplexity / Copilot 路由。
-> 这些站点会落到 `geosite-geolocation-!cn` → `Global` 分组（按地区手动选）。
-> 如需精细 AI 分流，请改用 `01-tun-ai/*` 或 `02-notun-ai/*` 模板。
-
----
-
-### 06. 极简配置
-
-**文件**: `04-minimal/minimal.json`
-
-**模式**: Mixed（仅 HTTP/SOCKS5，无 TUN），3 个分组（`Proxy` / `auto` / `direct`）
-
-> 命名与其他模板对齐：DNS 服务器为 `remote`/`local`，主选择器为 `Proxy`。跨模板切换时面板内选择器状态可复用。
+未指定 `auto_redirect_input_mark` / `auto_redirect_output_mark`，sing-box 用内置默认值。如果系统已有 iptables/nft 规则需要协调，可手动加：
+```json
+"auto_redirect_input_mark": "0x2023",
+"auto_redirect_output_mark": "0x2024"
+```
 
 ---
 
 ## AI 路由规则
 
-所有 AI 相关模板都包含以下服务的路由（优先走自建节点）：
+`ai/*.json` 全部覆盖以下服务（优先走自建节点）：
 
 | 服务 | 域名 |
 |------|------|
-| **Anthropic/Claude** | claude.ai, api.claude.ai, anthropic.com, api.anthropic.com, statsig.anthropic.com |
-| **OpenAI** | openai.com, api.openai.com, chat.openai.com, platform.openai.com |
-| **Google Gemini** | gemini.google.com, generativelanguage.googleapis.com, aistudio.google.com |
+| **Anthropic / Claude** | claude.ai, api.claude.ai, anthropic.com, api.anthropic.com, statsig.anthropic.com, console.anthropic.com |
+| **OpenAI** | openai.com, api.openai.com, chat.openai.com, platform.openai.com, auth.openai.com, cdn.openai.com, files.oaiusercontent.com |
+| **Google Gemini** | gemini.google.com, generativelanguage.googleapis.com, aistudio.google.com, aiplatform.googleapis.com, makersuite.google.com |
 | **Perplexity** | perplexity.ai |
-| **Microsoft Copilot** | copilot.microsoft.com |
+| **Microsoft Copilot** | copilot.microsoft.com, sydney.bing.com |
 | **Cloudflare AI Gateway** | gateway.ai.cloudflare.com |
 
-> **DeepSeek 说明**: DeepSeek 服务器托管在中国大陆，命中 `geosite-cn` 规则后走 `China → direct`，无需加入 AI 分组。如需通过代理访问，可在 Clash 面板将 `China` 分组手动切换到 `Proxy`。
+> **DeepSeek 说明**：DeepSeek 服务器托管在中国大陆，命中 `geosite-cn` 后走 `China → direct`，无需加入 AI 分组。如需通过代理访问，在 Clash 面板将 `China` 切到 `Proxy`。
 
-**流量走向**:
+**流量走向**：
 ```
 AI 域名 → AI selector → selfBuild (优先) → selfBuildAuto (自动) → direct (兜底)
 ```
 
-> 注：在含 Tailscale endpoint 的模板里，`ts` endpoint 的 `detour` 指向 `selfBuild`（手动选择器，立即可用），而非 `selfBuildAuto`（urltest，需等待健康检查）。这避免了"selfBuild 节点全挂时 Tailscale 也连不上"的连锁失败，控制面也无需等待 5-15 秒首测。
+> 含 Tailscale endpoint 的模板里，`ts.detour` 指向 `selfBuild`（手动选择器，立即可用），而非 `selfBuildAuto`（urltest，需等待健康检查）。这避免了"selfBuild 节点全挂时 Tailscale 也连不上"的连锁失败。
 
 ---
 
-## FakeIP 说明
+## FakeIP
 
 | 模板 | FakeIP |
 |------|--------|
-| `01-tun-ai/ai-universal.json` | ✅ |
-| `01-tun-ai/ai-universal-no-ts.json` | ✅ |
-| `02-notun-ai/` 全部 | ❌ |
-| `03-full-streaming/streaming-full.json` | ✅ |
-| `04-minimal/minimal.json` | ❌ |
+| `ai/tun-*.json` | ✅ |
+| `ai/mixed*.json` | ❌（NoTUN 不需要） |
+| `streaming/tun*.json` | ✅ |
+| `minimal/mixed.json` | ❌ |
+
+---
+
+## streaming/* 与 ai/* 的差异
+
+`streaming/tun*.json` 是**完整流媒体分流**模板（26 个分组：Netflix、Disney+、YouTube、Spotify、TikTok、Telegram、Twitter、Facebook、Google、Apple、Microsoft、Games、HBO、Prime Video…），**不含** Claude / Gemini / Perplexity / Copilot 路由。这些站点会落到 `geosite-geolocation-!cn` → `Global` 分组（按地区手动选）。
+
+如需精细 AI 分流，请改用 `ai/*` 模板，或在 `streaming/tun.json` 里把 AI 服务的 rule_set 和 outbound 手动并入。
+
+---
+
+## 性能调优默认值
+
+所有模板已应用下列经验值：
+
+| 项 | 值 | 说明 |
+|---|---|---|
+| `dns.cache_capacity` | 4096 | DNS LRU 缓存，<1024 会被忽略 |
+| `dns.independent_cache` | true | 不同 server 之间缓存隔离 |
+| `urltest.interval` | 10m | 自动测速周期 |
+| `urltest.idle_timeout` | 30m | 30 分钟无流量停止测速，省电 |
+| `urltest.tolerance` | 100 ms | 抖动门槛，避免频繁切换 |
+| `tun.route_exclude_address` | RFC1918 + Tailscale + IPv6 link-local | 私有网段不进 TUN |
+| `tun-linux 专用`：`auto_redirect: true` + `stack: system` | — | Linux nftables 转发，避开 gvisor 性能瓶颈 |
+| `cache_file.store_rdrc` | true | 持久化路由结果集 |
+| `cache_file.store_fakeip` | true（仅启用 fakeip 时） | 持久化 fakeip 映射 |
 
 ---
 
@@ -212,59 +153,36 @@ AI 域名 → AI selector → selfBuild (优先) → selfBuildAuto (自动) → 
 
 ### Clash 控制面安全（`clash_api.secret`）
 
-所有模板的 `clash_api.external_controller` 都绑在 `127.0.0.1:9090`，仅本机可访问；`secret` 默认为空。
+所有模板 `clash_api.external_controller` 绑在 `127.0.0.1:9090`，仅本机可访问；`secret` 默认为空。
 
-- **风险**：同机内任何进程（含浏览器插件、其他用户的脚本）都能调用 Clash API 切换出站。
-- **加固**：填一个随机字符串到 `secret` 字段，metacubexd 首次打开会要求输入：
+- **风险**：同机内任何进程都能调用 Clash API 切换出站。
+- **加固**：填随机字符串：
   ```json
-  "clash_api": { "secret": "随机字符串", ... }
+  "clash_api": { "secret": "随机字符串", "..." }
   ```
 
 ### `external_ui_download_url` 的 gh-proxy 依赖
 
-控制面板 metacubexd 通过 `gh-proxy.com` 拉取，存在以下风险：
-- gh-proxy 历史上多次域名变更/宕机；
-- 首次启动若 gh-proxy 不可用，控制面 404。
-
-**Fallback 方案**（任选其一）：
-1. 改用 jsdelivr 直拉（不经过 gh-proxy）：
-   ```
-   https://testingcf.jsdelivr.net/gh/MetaCubeX/metacubexd@gh-pages/index.html
-   ```
-   注意 jsdelivr 不支持单 zip 下载，需要客户端把整个仓库克隆下来。
-2. 提前手动下载 metacubexd 到 `external_ui` 指向的目录，避免运行时拉取。
-3. 接入仓库已有的 `gh_proxy_helper.py`（待 `main.py` 集成时启用）。
+- gh-proxy 历史上多次域名变更/宕机；首次启动若 gh-proxy 不可用，控制面 404。
+- **Fallback**：
+  1. 手动下载 metacubexd 到 `external_ui` 路径，避免运行时拉取。
+  2. 改 jsdelivr 直拉（须客户端整仓克隆，配置稍复杂）。
+  3. 待 `main.py` 集成仓库已有的 `gh_proxy_helper.py`。
 
 ---
 
 ## sing-box 版本兼容性
 
-- **最低版本**: v1.12.0
-- **推荐版本**: v1.13.x（最新稳定版）
-
----
-
-## 性能调优默认值
-
-所有模板已应用下列经验值（可按需在生成后覆盖）：
-
-| 项 | 值 | 说明 |
-|---|---|---|
-| `dns.cache_capacity` | 4096 | DNS LRU 缓存，<1024 会被忽略 |
-| `dns.independent_cache` | true | 不同 server 之间缓存隔离 |
-| `urltest.interval` | 10m | 自动测速周期 |
-| `urltest.idle_timeout` | 30m | 30 分钟无流量时停止测速，省电 |
-| `urltest.tolerance` | 100 ms | 抖动门槛，避免频繁切换影响长连接 |
-| `tun.route_exclude_address` | RFC1918 + Tailscale + IPv6 link-local | 私有网段不进 TUN |
-| `cache_file.store_rdrc` | true | 持久化路由结果集 |
-| `cache_file.store_fakeip` | true (开启 fakeip 时) | 持久化 fakeip 映射 |
+- **最低版本**：v1.12.0（DNS 新格式、`action` 字段）
+- **推荐版本**：v1.13.x（最新稳定，`auto_redirect` 已成熟）
+- `tun-linux.json` 的 `auto_redirect` 需 v1.10+
 
 ---
 
 ## 验证配置
 
 ```bash
-sing-box check -c config_template/01-tun-ai/ai-universal.json
+sing-box check -c config_template/ai/tun-android.json
 ```
 
 ---
@@ -273,14 +191,20 @@ sing-box check -c config_template/01-tun-ai/ai-universal.json
 
 ```bash
 # Android（内置 Tailscale）
-python3 main.py -u "你的订阅链接" -t 01-tun-ai/ai-universal
+python3 main.py -u "你的订阅链接" -t ai/tun-android
 
-# macOS（配合官方 Tailscale 客户端）
-python3 main.py -u "你的订阅链接" -t 01-tun-ai/ai-universal-no-ts
+# macOS / iOS / Windows（配合外部 Tailscale 客户端）
+python3 main.py -u "你的订阅链接" -t ai/tun-macos
+
+# Linux 桌面/服务器（高性能）
+python3 main.py -u "你的订阅链接" -t ai/tun-linux
 
 # 仅浏览器代理
-python3 main.py -u "你的订阅链接" -t 02-notun-ai/ai-universal
+python3 main.py -u "你的订阅链接" -t ai/mixed
 
 # 多地区分组
-python3 main.py -u "你的订阅链接" -t 02-notun-ai/ai-global
+python3 main.py -u "你的订阅链接" -t ai/mixed-global
+
+# 完整流媒体分流
+python3 main.py -u "你的订阅链接" -t streaming/tun
 ```
