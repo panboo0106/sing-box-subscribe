@@ -11,7 +11,8 @@ config_template/
 ├── ai/                      # AI 服务优先路由（Claude / OpenAI / Gemini / Perplexity / Copilot）
 │   ├── tun-android.json     # TUN + 内置 Tailscale endpoint
 │   ├── tun-macos.json       # TUN + 外部 Tailscale 客户端共存
-│   ├── tun-linux.json       # TUN + auto_redirect + system stack（Linux 桌面/服务器最佳性能）
+│   ├── tun-linux.json       # TUN + auto_redirect + system stack（Linux，外部 Tailscale 客户端）
+│   ├── tun-linux-ts.json    # TUN + auto_redirect + 内置 Tailscale endpoint（Linux 服务器推荐）
 │   ├── mixed.json           # Mixed inbound（HTTP/SOCKS5），无 Tailscale
 │   ├── mixed-ts.json        # Mixed inbound + 内置 Tailscale endpoint
 │   └── mixed-global.json    # Mixed inbound + 多地区分组（HK/TW/SG/JP/US/Others）+ 内置 Tailscale
@@ -48,6 +49,10 @@ config_template/
   - `tun-linux.json` — Linux 桌面/服务器（`auto_redirect: true` + `stack: system`）
   - 无后缀（如 `mixed.json`）= 跨平台通用
 - **Tailscale 标记**：`-ts` 后缀代表内置 sing-box Tailscale endpoint；无 `-ts` 代表用外部 Tailscale 客户端或不使用 Tailscale
+  - **约定例外**：以下两个文件按场景默认含内置 TS，不显式带 `-ts` 后缀：
+    - `tun-android.json` — Android 不能与官方 Tailscale App 同时跑 VPN，**只能用内置 TS**，是 Android 的唯一方案
+    - `mixed-global.json` — 多地区分组场景默认含 TS，对应"全功能版"语义
+  - 如需例外文件的"无 TS" 变体，对应使用 `tun-macos.json` / `mixed.json`
 - **特殊用途**：`mixed-global` 代表多地区分组
 
 ---
@@ -60,7 +65,8 @@ config_template/
 | **macOS** | `ai/tun-macos.json` | 配合官方 Tailscale 客户端，NAT 穿透更稳 |
 | **iOS** | `ai/tun-macos.json` | iOS 同时只能跑一个 VPN，用快捷指令切换 |
 | **Windows** | `ai/tun-macos.json` | 同 macOS 逻辑（不依赖 macOS 特有字段） |
-| **Linux 桌面/服务器** | `ai/tun-linux.json` | `auto_redirect` + nftables 高性能转发 |
+| **Linux 桌面（已装 tailscaled）** | `ai/tun-linux.json` | 配合官方 tailscaled，`auto_redirect` 高性能 |
+| **Linux 服务器（一站式）** | `ai/tun-linux-ts.json` | 内置 TS endpoint，省去 tailscaled，单进程管理 |
 | **仅浏览器代理** | `ai/mixed.json` 或 `ai/mixed-ts.json` | 配合 SwitchyOmega 等插件 |
 | **多地区分组** | `ai/mixed-global.json` | 节点多、需手动按地区选 |
 | **流媒体精细分流** | `streaming/tun.json` 或 `streaming/tun-linux.json` | ⚠️ 不含 AI 分流 |
@@ -74,17 +80,28 @@ iOS 系统限制：同时只允许一个活跃 VPN。sing-box (SFI) 和官方 Ta
 
 ### Linux 模板的取舍
 
+Linux 提供两种 Tailscale 方案：
+
+| 文件 | Tailscale 方案 | 适用 |
+|---|---|---|
+| `tun-linux.json` | 外部 tailscaled 守护进程 | 已习惯 systemd 管理 tailscaled 的桌面用户 |
+| `tun-linux-ts.json` | sing-box 内置 TS endpoint | 服务器/VPS，希望单 binary 部署 |
+
+两者共享 Linux 特性（`auto_redirect: true` + `strict_route: true` + `stack: system`）。`tun-linux.json` 排除 `100.64.0.0/10`（让 tailscaled 处理）；`tun-linux-ts.json` 不排除（让 sing-box 自己路由到 `ts` endpoint）。
+
 `tun-linux.json` 与 `tun-macos.json` 的区别只有 3 个字段：
 ```json
 "strict_route": true,         // Linux 上推荐启用，防 DNS 泄露
 "auto_redirect": true,        // 启用 nftables 重定向，绕过 gvisor 性能瓶颈
 "stack": "system"             // 配合 auto_redirect 用 system stack
 ```
-未指定 `auto_redirect_input_mark` / `auto_redirect_output_mark`，sing-box 用内置默认值。如果系统已有 iptables/nft 规则需要协调，可手动加：
-```json
-"auto_redirect_input_mark": "0x2023",
-"auto_redirect_output_mark": "0x2024"
-```
+未指定 `auto_redirect_input_mark` / `auto_redirect_output_mark`，sing-box 用内置默认值（`0x2023` / `0x2024`）。如果系统已有 iptables/nft 规则需要协调，可手动指定其他值。
+
+#### ⚠️ Linux 实战坑
+
+- **`auto_redirect` 与 UFW/firewalld/Docker 的 nftables 冲突**：sing-box 启动时会插入自己的 nftables 链。若机器跑 UFW（Ubuntu 默认）、firewalld（RHEL/Fedora 默认）或 Docker（默认创建 `DOCKER` 链），可能出现规则顺序错乱、Docker 容器外网不通、或 sing-box 自己的链被宿主防火墙清空。排查思路：`nft list ruleset | grep sing-box`，若链不存在或被刷掉就是冲突。临时绕过：把 `auto_redirect` 改回 `false` 退回 gvisor 路径（牺牲性能但稳定）。
+- **`strict_route: true` 与 VirtualBox / KVM 桥接 / 多网卡场景**：strict_route 会对未识别的网络段返回 unreachable，桥接网卡上的虚拟机网络可能被切断。排查：虚拟机内 `ping 网关` 不通就是命中。修复：手动把虚拟机网段加入 `route_exclude_address`（如 `192.168.56.0/24` for VBox host-only），或把 `strict_route` 改回 `false`（macOS 模板默认值）。
+- **容器/嵌套虚拟化场景**：如遇网络异常，可把 `stack` 从 `system` 改回 `mixed`（编译时默认），用 gvisor 路径换最大兼容性。
 
 ---
 
@@ -196,8 +213,11 @@ python3 main.py -u "你的订阅链接" -t ai/tun-android
 # macOS / iOS / Windows（配合外部 Tailscale 客户端）
 python3 main.py -u "你的订阅链接" -t ai/tun-macos
 
-# Linux 桌面/服务器（高性能）
+# Linux 桌面（外部 tailscaled）
 python3 main.py -u "你的订阅链接" -t ai/tun-linux
+
+# Linux 服务器（内置 TS endpoint，省去 tailscaled）
+python3 main.py -u "你的订阅链接" -t ai/tun-linux-ts
 
 # 仅浏览器代理
 python3 main.py -u "你的订阅链接" -t ai/mixed
