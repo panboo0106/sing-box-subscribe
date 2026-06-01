@@ -40,20 +40,37 @@ config_template/
 
 ## 命名约定
 
-文件名 = `<inbound>-<平台>` 或单 `<inbound>`：
+文件名规则按 **三个独立维度** 组合：`<inbound>[-<平台>][-ts]`
 
-- **inbound 维度**：`tun`（TUN+Mixed 双入站）/ `mixed`（仅 HTTP/SOCKS5）
-- **平台后缀**：
-  - `tun-android.json` — Android（含内置 TS endpoint）
-  - `tun-macos.json` — macOS / iOS / Windows（外部 Tailscale，gvisor）
-  - `tun-linux.json` — Linux 桌面/服务器（`auto_redirect: true` + `stack: system`）
-  - 无后缀（如 `mixed.json`）= 跨平台通用
-- **Tailscale 标记**：`-ts` 后缀代表内置 sing-box Tailscale endpoint；无 `-ts` 代表用外部 Tailscale 客户端或不使用 Tailscale
-  - **约定例外**：以下两个文件按场景默认含内置 TS，不显式带 `-ts` 后缀：
-    - `tun-android.json` — Android 不能与官方 Tailscale App 同时跑 VPN，**只能用内置 TS**，是 Android 的唯一方案
-    - `mixed-global.json` — 多地区分组场景默认含 TS，对应"全功能版"语义
-  - 如需例外文件的"无 TS" 变体，对应使用 `tun-macos.json` / `mixed.json`
-- **特殊用途**：`mixed-global` 代表多地区分组
+#### 维度 1：inbound 类型（必有，文件名第一段）
+
+| 值 | 含义 |
+|---|---|
+| `tun` | TUN + Mixed 双入站（系统级代理） |
+| `mixed` | 仅 HTTP/SOCKS5（应用级代理） |
+
+#### 维度 2：平台后缀（可选，第二段）
+
+| 值 | 含义 |
+|---|---|
+| `-android` | Android 专属（gvisor，不排除 100.64/10） |
+| `-macos` | macOS / iOS / Windows 通用（外部 Tailscale，gvisor） |
+| `-linux` | Linux 专属（`auto_redirect` + `strict_route` + `stack: system`） |
+| _（无）_ | 跨平台通用 |
+
+#### 维度 3：Tailscale 标记（可选，最后一段）
+
+| 值 | 含义 |
+|---|---|
+| `-ts` | 含内置 sing-box Tailscale endpoint |
+| _（无）_ | 用外部 Tailscale 客户端，或完全不用 Tailscale |
+
+#### 约定例外（不显式带 `-ts` 但含内置 TS）
+
+- `tun-android.json` — Android 不能与官方 Tailscale App 同时跑 VPN，**只能用内置 TS**，是 Android 的唯一方案
+- `mixed-global.json` — 多地区分组场景默认含 TS，对应"全功能版"语义
+
+如需例外文件的"无 TS" 变体，对应使用 `tun-macos.json` / `mixed.json`。
 
 ---
 
@@ -88,6 +105,13 @@ Linux 提供两种 Tailscale 方案：
 | `tun-linux-ts.json` | sing-box 内置 TS endpoint | 服务器/VPS，希望单 binary 部署 |
 
 两者共享 Linux 特性（`auto_redirect: true` + `strict_route: true` + `stack: system`）。`tun-linux.json` 排除 `100.64.0.0/10`（让 tailscaled 处理）；`tun-linux-ts.json` 不排除（让 sing-box 自己路由到 `ts` endpoint）。
+
+> **`tun-linux-ts.json` 的 `state_directory` 路径**：默认 `$HOME/.config/sing-box/tailscale`，适合桌面用户手动 `sing-box run -c config.json`。如用 systemd 部署，`$HOME` 在 service 上下文下可能未设置或为 `/root`，需在 service 单元里显式声明：
+> ```ini
+> [Service]
+> Environment=HOME=/var/lib/sing-box
+> # 或者直接改 config.json 把 state_directory 写成绝对路径，例如 /var/lib/sing-box/tailscale
+> ```
 
 `tun-linux.json` 与 `tun-macos.json` 的区别只有 3 个字段：
 ```json
