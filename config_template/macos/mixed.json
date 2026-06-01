@@ -14,7 +14,7 @@
     },
     "cache_file": {
       "enabled": true,
-      "store_fakeip": true,
+      "store_fakeip": false,
       "store_rdrc": true
     }
   },
@@ -29,20 +29,7 @@
       {
         "tag": "local",
         "type": "https",
-        "server": "223.5.5.5",
-        "detour": "direct"
-      },
-      {
-        "tag": "tailscale-dns",
-        "type": "tailscale",
-        "endpoint": "ts",
-        "accept_default_resolvers": false
-      },
-      {
-        "tag": "fakeip",
-        "type": "fakeip",
-        "inet4_range": "198.18.0.0/15",
-        "inet6_range": "fc00::/18"
+        "server": "223.5.5.5"
       }
     ],
     "rules": [
@@ -63,22 +50,6 @@
         ],
         "action": "route",
         "server": "local"
-      },
-      {
-        "domain_suffix": [
-          ".ts.net",
-          ".tailscale.net"
-        ],
-        "action": "route",
-        "server": "tailscale-dns"
-      },
-      {
-        "domain_suffix": [
-          ".tailscale.com",
-          ".tailscale.io"
-        ],
-        "action": "route",
-        "server": "remote"
       },
       {
         "domain": [
@@ -124,14 +95,6 @@
         "rule_set": "geosite-cn",
         "action": "route",
         "server": "local"
-      },
-      {
-        "query_type": [
-          "A",
-          "AAAA"
-        ],
-        "action": "route",
-        "server": "fakeip"
       }
     ],
     "final": "remote",
@@ -139,24 +102,6 @@
     "independent_cache": true
   },
   "inbounds": [
-    {
-      "tag": "tun-in",
-      "type": "tun",
-      "address": [
-        "172.19.0.0/30",
-        "fdfe:dcba:9876::1/126"
-      ],
-      "auto_route": true,
-      "strict_route": false,
-      "route_exclude_address": [
-        "10.0.0.0/8",
-        "172.16.0.0/12",
-        "192.168.0.0/16",
-        "fe80::/10",
-        "ff00::/8"
-      ],
-      "stack": "gvisor"
-    },
     {
       "tag": "mixed-in",
       "type": "mixed",
@@ -270,7 +215,6 @@
     "rules": [
       {
         "inbound": [
-          "tun-in",
           "mixed-in"
         ],
         "action": "sniff"
@@ -311,30 +255,6 @@
         ],
         "action": "route",
         "outbound": "direct"
-      },
-      {
-        "ip_cidr": [
-          "100.64.0.0/10",
-          "fd7a:115c:a1e0::/48"
-        ],
-        "action": "route",
-        "outbound": "ts"
-      },
-      {
-        "domain_suffix": [
-          ".ts.net",
-          ".tailscale.net"
-        ],
-        "action": "route",
-        "outbound": "ts"
-      },
-      {
-        "domain_suffix": [
-          ".tailscale.com",
-          ".tailscale.io"
-        ],
-        "action": "route",
-        "outbound": "Proxy"
       },
       {
         "ip_is_private": true,
@@ -441,14 +361,5 @@
         "download_detour": "direct"
       }
     ]
-  },
-  "endpoints": [
-    {
-      "type": "tailscale",
-      "tag": "ts",
-      "state_directory": "$HOME/.config/sing-box/tailscale",
-      "auth_key": "$TS_AUTHKEY",
-      "detour": "selfBuild"
-    }
-  ]
+  }
 }

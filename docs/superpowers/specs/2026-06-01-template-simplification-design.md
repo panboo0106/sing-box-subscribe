@@ -71,6 +71,15 @@ config_template/
 - 仅 mixed inbound，作为浏览器代理或 iOS 快捷指令切换场景
 - Tailscale App 独立运行，不与 sing-box 交互
 
+**iOS 模板的硬性验收清单（同 §9 的人工检查项）**：
+
+- ❌ 无 `dns.fakeip` 块
+- ❌ 无 `inbounds[].type == "tun"` 或任何 tun 相关字段
+- ❌ 无 `endpoints` / `tailscale` 类型 DNS 服务器
+- ❌ 无 `route_exclude_address`
+- ✅ AI 路由规则与 macOS 一致（Claude / OpenAI / Gemini / Perplexity / Copilot）
+- ✅ `sing-box check` 通过
+
 ### 5.2 macOS 双模板的存在理由
 
 - `tun.json`：日常系统级代理。需要 `route_exclude_address: 100.64.0.0/10` 让 Tailscale App 流量绕过 sing-box TUN
@@ -145,6 +154,8 @@ config_template/
 
 DNS 默认就是直连，删除 detour 字段后行为完全等价，并解决 sing-box 1.13+ 启动失败。
 
+> `ios/mixed.json` 派生自已修复后的 `macos/mixed.json`，自动继承此修复，无需重复处理。
+
 ## 8. README.md 重写
 
 旧 README 255 行，新 README 目标 100-120 行。
@@ -173,11 +184,27 @@ DNS 默认就是直连，删除 detour 字段后行为完全等价，并解决 s
 
 ## 9. 验证计划
 
-每个新模板必须通过：
+模板里的 `filter: [...]` + `{all}` 是订阅工具 `main.py` 的 DSL，不是 sing-box 原生字段。因此**不能直接对模板跑 `sing-box check`**（会报 `unknown field "filter"`）。
+
+**正确的两段式验证**：
+
+### 9.1 模板语法验证（任何平台）
 
 ```bash
-sing-box check -c config_template/<platform>/<inbound>.json
+python3 -c "import json; json.load(open('config_template/<platform>/<inbound>.json'))"
 ```
+
+确保 JSON 合法、关键字段（inbounds、outbounds、route）齐全。
+
+### 9.2 生成 config 后验证（按平台）
+
+```bash
+# macOS / 通用模板可在 macOS 上完整 check
+uv run python3 main.py --template_index <idx> --providers local_providers.json
+sing-box check -c config.json
+```
+
+**linux/tun.json 的跨平台限制**：含 `auto_redirect: true` + `stack: system` 是 Linux 专属 inbound 字段，**不能在 macOS / Windows 上跑 `sing-box check`**（会报 `initialize auto-redirect: invalid argument`，这是 sing-box 的 platform-specific init 行为）。在 macOS 上用 JSON 解析 + 字段审计验证；真正的 init check 需在 Linux 环境执行。
 
 iOS 模板额外人工检查：
 

@@ -14,7 +14,7 @@
     },
     "cache_file": {
       "enabled": true,
-      "store_fakeip": false,
+      "store_fakeip": true,
       "store_rdrc": true
     }
   },
@@ -29,14 +29,19 @@
       {
         "tag": "local",
         "type": "https",
-        "server": "223.5.5.5",
-        "detour": "direct"
+        "server": "223.5.5.5"
       },
       {
         "tag": "tailscale-dns",
         "type": "tailscale",
         "endpoint": "ts",
         "accept_default_resolvers": false
+      },
+      {
+        "tag": "fakeip",
+        "type": "fakeip",
+        "inet4_range": "198.18.0.0/15",
+        "inet6_range": "fc00::/18"
       }
     ],
     "rules": [
@@ -118,22 +123,39 @@
         "rule_set": "geosite-cn",
         "action": "route",
         "server": "local"
+      },
+      {
+        "query_type": [
+          "A",
+          "AAAA"
+        ],
+        "action": "route",
+        "server": "fakeip"
       }
     ],
     "final": "remote",
     "cache_capacity": 4096,
     "independent_cache": true
   },
-  "endpoints": [
-    {
-      "type": "tailscale",
-      "tag": "ts",
-      "state_directory": "$HOME/.config/sing-box/tailscale",
-      "auth_key": "$TS_AUTHKEY",
-      "detour": "selfBuild"
-    }
-  ],
   "inbounds": [
+    {
+      "tag": "tun-in",
+      "type": "tun",
+      "address": [
+        "172.19.0.0/30",
+        "fdfe:dcba:9876::1/126"
+      ],
+      "auto_route": true,
+      "strict_route": false,
+      "route_exclude_address": [
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16",
+        "fe80::/10",
+        "ff00::/8"
+      ],
+      "stack": "gvisor"
+    },
     {
       "tag": "mixed-in",
       "type": "mixed",
@@ -247,6 +269,7 @@
     "rules": [
       {
         "inbound": [
+          "tun-in",
           "mixed-in"
         ],
         "action": "sniff"
@@ -417,5 +440,14 @@
         "download_detour": "direct"
       }
     ]
-  }
+  },
+  "endpoints": [
+    {
+      "type": "tailscale",
+      "tag": "ts",
+      "state_directory": "$HOME/.config/sing-box/tailscale",
+      "auth_key": "$TS_AUTHKEY",
+      "detour": "selfBuild"
+    }
+  ]
 }
