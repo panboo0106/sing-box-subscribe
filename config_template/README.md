@@ -142,7 +142,9 @@ iOS 系统限制：同时只允许一个活跃 VPN（NetworkExtension）。sing-
 
 **监听端口**: `7890`
 
-**额外分组**: `HK`, `TW`, `SG`, `JP`, `US`, `Others`
+**额外分组**: `HK`, `TW`, `SG`, `JP`, `US`, `Others`, `China`
+
+> 与 `02-notun-ai/ai-universal.json` 一致，`China` 默认 `direct`，可在 Clash 面板手动切到 `Proxy`（临时全代理国内站时有用）。
 
 ---
 
@@ -160,7 +162,9 @@ iOS 系统限制：同时只允许一个活跃 VPN（NetworkExtension）。sing-
 
 **文件**: `04-minimal/minimal.json`
 
-**模式**: TUN，仅 3 个分组（proxy / auto / direct）
+**模式**: Mixed（仅 HTTP/SOCKS5，无 TUN），3 个分组（`Proxy` / `auto` / `direct`）
+
+> 命名与其他模板对齐：DNS 服务器为 `remote`/`local`，主选择器为 `Proxy`。跨模板切换时面板内选择器状态可复用。
 
 ---
 
@@ -184,6 +188,8 @@ iOS 系统限制：同时只允许一个活跃 VPN（NetworkExtension）。sing-
 AI 域名 → AI selector → selfBuild (优先) → selfBuildAuto (自动) → direct (兜底)
 ```
 
+> 注：在含 Tailscale endpoint 的模板里，`ts` endpoint 的 `detour` 指向 `selfBuild`（手动选择器，立即可用），而非 `selfBuildAuto`（urltest，需等待健康检查）。这避免了"selfBuild 节点全挂时 Tailscale 也连不上"的连锁失败，控制面也无需等待 5-15 秒首测。
+
 ---
 
 ## FakeIP 说明
@@ -202,6 +208,21 @@ AI 域名 → AI selector → selfBuild (优先) → selfBuildAuto (自动) → 
 
 - **最低版本**: v1.12.0
 - **推荐版本**: v1.13.x（最新稳定版）
+
+---
+
+## 性能调优默认值
+
+所有模板已应用下列经验值（可按需在生成后覆盖）：
+
+| 项 | 值 | 说明 |
+|---|---|---|
+| `dns.cache_capacity` | 4096 | DNS LRU 缓存，<1024 会被忽略 |
+| `dns.independent_cache` | true | 不同 server 之间缓存隔离 |
+| `urltest.interval` | 10m (ai-global 5m) | 自动测速周期 |
+| `urltest.tolerance` | 100 ms | 抖动门槛，避免频繁切换影响长连接 |
+| `cache_file.store_rdrc` | true | 持久化路由结果集 |
+| `cache_file.store_fakeip` | true (开启 fakeip 时) | 持久化 fakeip 映射 |
 
 ---
 
