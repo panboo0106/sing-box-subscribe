@@ -459,6 +459,16 @@ def combin_to_config(config, data):
                 # 已存在同名 subgroup，直接追加节点到已有 selector
                 seen_subgroups[subgroup_tag]["outbounds"].append('{' + group + '}')
                 continue
+            existing = next((o for o in config_outbounds if o.get('tag') == subgroup_tag), None)
+            if existing is not None:
+                # 模板已定义同名 selector（如 selfBuild），追加节点而非新建以避免 duplicate tag
+                existing_outbounds = existing.get("outbounds") or []
+                if isinstance(existing_outbounds, str):
+                    existing_outbounds = [existing_outbounds]
+                existing_outbounds.append('{' + group + '}')
+                existing["outbounds"] = existing_outbounds
+                seen_subgroups[subgroup_tag] = existing
+                continue
             i += 1
             for out in config_outbounds:
                 if out.get("outbounds"):
