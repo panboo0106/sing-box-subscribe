@@ -92,6 +92,21 @@ config_template/
 - 因此 sing-box 必须内置 TS endpoint
 - 不排除 `100.64.0.0/10`，让 sing-box 自己处理 TS 流量
 
+**Android 配置方式与 Linux 不通用**（2026-06-01 实测补充）：
+
+- sing-box 不做 shell 变量展开。Linux/systemd 上 `state_directory: $HOME/.config/...` 能 work 是靠 systemd 的 `Environment=HOME=...` 注入；**Android GUI 客户端没有这种入口**，`$HOME` 直接当字面量，`mkdir /.config` 撞上 Android 根目录只读 → `post-start endpoint/tailscale[ts]: tsnet: mkdir /.config: read-only file system`
+- Android 模板的 `state_directory` 必须用相对路径（如 `tailscale`），落到 SFA 工作目录 `/sdcard/Android/data/io.nekohasekai.sfa/files/` 下
+- Android 模板**不写** `auth_key`。sing-box 在 GUI 客户端会弹通知给出 Tailscale 登录 URL，浏览器授权（[官方文档](https://sing-box.sagernet.org/configuration/endpoint/tailscale/)：「By default, sing-box will log the login URL (or popup a notification on graphical clients)」）
+
+**Android 内置 TS 已知风险**（社区报告，可接受范围内）：
+
+| 风险 | issue |
+|---|---|
+| Android 10 SIGSYS 崩溃（seccomp 拦截 syscall 434） | [#3233](https://github.com/SagerNet/sing-box/issues/3233) |
+| sing-box 1.13+ UDP 回归 | [#3863](https://github.com/SagerNet/sing-box/issues/3863) |
+| 双向可达性不对称（mobile 出向 ICMP 不走 TUN） | [#3755](https://github.com/SagerNet/sing-box/issues/3755) |
+| 约 9 天 token 失效 | [#3643](https://github.com/SagerNet/sing-box/issues/3643) |
+
 ### 5.4 Linux 单一变体
 
 - 用户确认仅用内置 TS 方案（不维护外部 tailscaled 共存版）

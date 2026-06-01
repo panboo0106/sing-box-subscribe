@@ -445,8 +445,7 @@
     {
       "type": "tailscale",
       "tag": "ts",
-      "state_directory": "$HOME/.config/sing-box/tailscale",
-      "auth_key": "$TS_AUTHKEY",
+      "state_directory": "tailscale",
       "detour": "selfBuild"
     }
   ]
