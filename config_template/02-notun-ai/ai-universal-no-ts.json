@@ -29,7 +29,8 @@
       {
         "tag": "local",
         "type": "https",
-        "server": "223.5.5.5"
+        "server": "223.5.5.5",
+        "detour": "direct"
       }
     ],
     "rules": [
@@ -98,6 +99,7 @@
       }
     ],
     "final": "remote",
+    "cache_capacity": 4096,
     "independent_cache": true
   },
   "inbounds": [
@@ -147,7 +149,7 @@
       ],
       "url": "http://www.gstatic.com/generate_204",
       "interval": "10m",
-      "tolerance": 50
+      "tolerance": 100
     },
     {
       "tag": "selfBuild",
@@ -180,7 +182,7 @@
       ],
       "url": "http://www.gstatic.com/generate_204",
       "interval": "10m",
-      "tolerance": 50
+      "tolerance": 100
     },
     {
       "tag": "direct",

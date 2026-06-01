@@ -21,40 +21,42 @@
   "dns": {
     "servers": [
       {
-        "tag": "proxyDns",
+        "tag": "remote",
         "type": "tls",
         "server": "8.8.8.8",
-        "detour": "proxy"
+        "detour": "Proxy"
       },
       {
-        "tag": "localDns",
+        "tag": "local",
         "type": "https",
-        "server": "223.5.5.5"
+        "server": "223.5.5.5",
+        "detour": "direct"
       }
     ],
     "rules": [
       {
         "clash_mode": "direct",
         "action": "route",
-        "server": "localDns"
+        "server": "local"
       },
       {
         "clash_mode": "global",
         "action": "route",
-        "server": "proxyDns"
+        "server": "remote"
       },
       {
         "domain_suffix": [".arpa", ".local"],
         "action": "route",
-        "server": "localDns"
+        "server": "local"
       },
       {
         "rule_set": "geosite-cn",
         "action": "route",
-        "server": "localDns"
+        "server": "local"
       }
     ],
-    "final": "proxyDns",
+    "final": "remote",
+    "cache_capacity": 4096,
     "independent_cache": true
   },
   "inbounds": [
@@ -67,7 +69,7 @@
   ],
   "outbounds": [
     {
-      "tag": "proxy",
+      "tag": "Proxy",
       "type": "selector",
       "outbounds": [
         "auto",
@@ -81,9 +83,17 @@
       "outbounds": [
         "{all}"
       ],
+      "filter": [
+        {
+          "action": "exclude",
+          "keywords": [
+            "网站|地址|剩余|过期|时间|有效"
+          ]
+        }
+      ],
       "url": "http://www.gstatic.com/generate_204",
       "interval": "10m",
-      "tolerance": 50
+      "tolerance": 100
     },
     {
       "type": "direct",
@@ -92,7 +102,7 @@
   ],
   "route": {
     "auto_detect_interface": true,
-    "final": "proxy",
+    "final": "Proxy",
     "rules": [
       {
         "inbound": [
@@ -125,7 +135,7 @@
       {
         "clash_mode": "global",
         "action": "route",
-        "outbound": "proxy"
+        "outbound": "Proxy"
       },
       {
         "domain": [
@@ -170,7 +180,7 @@
       }
     ],
     "default_domain_resolver": {
-      "server": "localDns"
+      "server": "local"
     }
   }
 }

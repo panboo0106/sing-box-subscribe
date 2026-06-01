@@ -29,7 +29,8 @@
       {
         "tag": "localDns",
         "type": "https",
-        "server": "223.5.5.5"
+        "server": "223.5.5.5",
+        "detour": "direct"
       },
       {
         "tag": "fakeip",
@@ -74,6 +75,7 @@
       }
     ],
     "final": "proxyDns",
+    "cache_capacity": 4096,
     "independent_cache": true
   },
   "inbounds": [
@@ -416,7 +418,7 @@
       ],
       "url": "http://www.gstatic.com/generate_204",
       "interval": "10m",
-      "tolerance": 50
+      "tolerance": 100
     },
     {
       "type": "direct",
@@ -734,7 +736,7 @@
         "tag": "geoip-apple",
         "type": "remote",
         "format": "binary",
-        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo-lite/geoip/apple.srs",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geoip/apple.srs",
         "download_detour": "direct"
       },
       {

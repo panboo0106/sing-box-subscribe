@@ -29,7 +29,8 @@
       {
         "tag": "local",
         "type": "https",
-        "server": "223.5.5.5"
+        "server": "223.5.5.5",
+        "detour": "direct"
       },
       {
         "tag": "tailscale-dns",
@@ -120,6 +121,7 @@
       }
     ],
     "final": "remote",
+    "cache_capacity": 4096,
     "independent_cache": true
   },
   "inbounds": [
@@ -177,7 +179,7 @@
       ],
       "url": "http://www.gstatic.com/generate_204",
       "interval": "5m",
-      "tolerance": 50
+      "tolerance": 100
     },
     {
       "tag": "Global",
@@ -314,11 +316,19 @@
       ],
       "url": "http://www.gstatic.com/generate_204",
       "interval": "5m",
-      "tolerance": 50
+      "tolerance": 100
     },
     {
       "tag": "direct",
       "type": "direct"
+    },
+    {
+      "tag": "China",
+      "type": "selector",
+      "outbounds": [
+        "direct",
+        "Proxy"
+      ]
     }
   ],
   "route": {
@@ -447,7 +457,7 @@
           "geosite-cn"
         ],
         "action": "route",
-        "outbound": "direct"
+        "outbound": "China"
       }
     ],
     "rule_set": [
@@ -508,7 +518,7 @@
       "tag": "ts",
       "state_directory": "$HOME/.config/sing-box/tailscale",
       "auth_key": "$TS_AUTHKEY",
-      "detour": "selfBuildAuto"
+      "detour": "selfBuild"
     }
   ]
 }
