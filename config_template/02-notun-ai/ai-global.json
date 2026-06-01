@@ -178,7 +178,8 @@
         }
       ],
       "url": "http://www.gstatic.com/generate_204",
-      "interval": "5m",
+      "interval": "10m",
+      "idle_timeout": "30m",
       "tolerance": 100
     },
     {
@@ -315,7 +316,8 @@
         }
       ],
       "url": "http://www.gstatic.com/generate_204",
-      "interval": "5m",
+      "interval": "10m",
+      "idle_timeout": "30m",
       "tolerance": 100
     },
     {

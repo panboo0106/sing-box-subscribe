@@ -156,6 +156,10 @@ iOS 系统限制：同时只允许一个活跃 VPN（NetworkExtension）。sing-
 
 **分组** (26个): Netflix, Disney+, YouTube, Spotify, TikTok, Telegram, Twitter, Facebook, Google, Apple, Microsoft, Games...
 
+> ⚠️ **不含 AI 分流**：此模板只覆盖 OpenAI，**没有** Claude / Gemini / Perplexity / Copilot 路由。
+> 这些站点会落到 `geosite-geolocation-!cn` → `Global` 分组（按地区手动选）。
+> 如需精细 AI 分流，请改用 `01-tun-ai/*` 或 `02-notun-ai/*` 模板。
+
 ---
 
 ### 06. 极简配置
@@ -204,6 +208,35 @@ AI 域名 → AI selector → selfBuild (优先) → selfBuildAuto (自动) → 
 
 ---
 
+## 已知风险与可选加固
+
+### Clash 控制面安全（`clash_api.secret`）
+
+所有模板的 `clash_api.external_controller` 都绑在 `127.0.0.1:9090`，仅本机可访问；`secret` 默认为空。
+
+- **风险**：同机内任何进程（含浏览器插件、其他用户的脚本）都能调用 Clash API 切换出站。
+- **加固**：填一个随机字符串到 `secret` 字段，metacubexd 首次打开会要求输入：
+  ```json
+  "clash_api": { "secret": "随机字符串", ... }
+  ```
+
+### `external_ui_download_url` 的 gh-proxy 依赖
+
+控制面板 metacubexd 通过 `gh-proxy.com` 拉取，存在以下风险：
+- gh-proxy 历史上多次域名变更/宕机；
+- 首次启动若 gh-proxy 不可用，控制面 404。
+
+**Fallback 方案**（任选其一）：
+1. 改用 jsdelivr 直拉（不经过 gh-proxy）：
+   ```
+   https://testingcf.jsdelivr.net/gh/MetaCubeX/metacubexd@gh-pages/index.html
+   ```
+   注意 jsdelivr 不支持单 zip 下载，需要客户端把整个仓库克隆下来。
+2. 提前手动下载 metacubexd 到 `external_ui` 指向的目录，避免运行时拉取。
+3. 接入仓库已有的 `gh_proxy_helper.py`（待 `main.py` 集成时启用）。
+
+---
+
 ## sing-box 版本兼容性
 
 - **最低版本**: v1.12.0
@@ -219,8 +252,10 @@ AI 域名 → AI selector → selfBuild (优先) → selfBuildAuto (自动) → 
 |---|---|---|
 | `dns.cache_capacity` | 4096 | DNS LRU 缓存，<1024 会被忽略 |
 | `dns.independent_cache` | true | 不同 server 之间缓存隔离 |
-| `urltest.interval` | 10m (ai-global 5m) | 自动测速周期 |
+| `urltest.interval` | 10m | 自动测速周期 |
+| `urltest.idle_timeout` | 30m | 30 分钟无流量时停止测速，省电 |
 | `urltest.tolerance` | 100 ms | 抖动门槛，避免频繁切换影响长连接 |
+| `tun.route_exclude_address` | RFC1918 + Tailscale + IPv6 link-local | 私有网段不进 TUN |
 | `cache_file.store_rdrc` | true | 持久化路由结果集 |
 | `cache_file.store_fakeip` | true (开启 fakeip 时) | 持久化 fakeip 映射 |
 

@@ -131,7 +131,9 @@
         "172.16.0.0/12",
         "192.168.0.0/16",
         "100.64.0.0/10",
-        "fd7a:115c:a1e0::/48"
+        "fd7a:115c:a1e0::/48",
+        "fe80::/10",
+        "ff00::/8"
       ],
       "stack": "gvisor"
     },
@@ -181,6 +183,7 @@
       ],
       "url": "http://www.gstatic.com/generate_204",
       "interval": "10m",
+      "idle_timeout": "30m",
       "tolerance": 100
     },
     {
@@ -214,6 +217,7 @@
       ],
       "url": "http://www.gstatic.com/generate_204",
       "interval": "10m",
+      "idle_timeout": "30m",
       "tolerance": 100
     },
     {
