@@ -96,16 +96,10 @@ Environment=TS_AUTHKEY=tskey-auth-xxxx
 
 ## AI 路由覆盖
 
-`ai/*` 全部模板优先把以下服务走自建节点：
+全部模板把 AI 服务流量优先送往自建节点，域名维护分两层：
 
-| 服务 | 域名 |
-|---|---|
-| **Anthropic / Claude** | claude.ai, api.claude.ai, anthropic.com, api.anthropic.com, statsig.anthropic.com, console.anthropic.com |
-| **OpenAI** | openai.com, api.openai.com, chat.openai.com, platform.openai.com, auth.openai.com, cdn.openai.com, files.oaiusercontent.com |
-| **Google Gemini** | gemini.google.com, generativelanguage.googleapis.com, aistudio.google.com, aiplatform.googleapis.com, makersuite.google.com |
-| **Perplexity** | perplexity.ai |
-| **Microsoft Copilot** | copilot.microsoft.com, sydney.bing.com |
-| **Cloudflare AI Gateway** | gateway.ai.cloudflare.com |
+- **geosite rule_set**（主力，随上游自动保鲜）：`geosite-openai` / `geosite-anthropic` / `geosite-google-gemini` / `geosite-perplexity`。MetaCubeX meta-rules-dat 编译自 v2fly domain-list-community，按 suffix 匹配，已含 chatgpt.com、sora.com、claude.com 等新域名
+- **模板内联 `domain` 列表**（仅保留 geosite 未覆盖的 4 个，2026-07 对照 srs 反编译核实）：`aiplatform.googleapis.com`（Vertex AI）、`copilot.microsoft.com`、`sydney.bing.com`（Copilot）、`gateway.ai.cloudflare.com`（AI Gateway）
 
 **DeepSeek 说明**：DeepSeek 服务器在中国大陆，命中 `geosite-cn` 后走 `China → direct`，无需加入 AI 分组。
 
