@@ -8,8 +8,8 @@
       "external_controller": "127.0.0.1:9090",
       "external_ui": "ui",
       "secret": "",
-      "external_ui_download_url": "https://gh-proxy.com/https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip",
-      "external_ui_download_detour": "direct",
+      "external_ui_download_url": "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip",
+      "external_ui_download_detour": "Proxy",
       "default_mode": "rule"
     },
     "cache_file": {
@@ -46,6 +46,22 @@
     ],
     "rules": [
       {
+        "domain_suffix": [
+          ".ts.net",
+          ".tailscale.net"
+        ],
+        "action": "route",
+        "server": "tailscale-dns"
+      },
+      {
+        "domain_suffix": [
+          ".tailscale.com",
+          ".tailscale.io"
+        ],
+        "action": "route",
+        "server": "remote"
+      },
+      {
         "clash_mode": "direct",
         "action": "route",
         "server": "local"
@@ -64,44 +80,8 @@
         "server": "local"
       },
       {
-        "domain_suffix": [
-          ".ts.net",
-          ".tailscale.net"
-        ],
-        "action": "route",
-        "server": "tailscale-dns"
-      },
-      {
-        "domain_suffix": [
-          ".tailscale.com",
-          ".tailscale.io"
-        ],
-        "action": "route",
-        "server": "remote"
-      },
-      {
         "domain": [
-          "gemini.google.com",
-          "generativelanguage.googleapis.com",
           "aiplatform.googleapis.com",
-          "makersuite.google.com",
-          "aistudio.google.com",
-          "alkalimakersuite-pa.clients6.google.com",
-          "alkalicore-pa.clients6.google.com",
-          "openai.com",
-          "chat.openai.com",
-          "api.openai.com",
-          "platform.openai.com",
-          "auth.openai.com",
-          "cdn.openai.com",
-          "files.oaiusercontent.com",
-          "claude.ai",
-          "api.claude.ai",
-          "anthropic.com",
-          "api.anthropic.com",
-          "statsig.anthropic.com",
-          "console.anthropic.com",
-          "perplexity.ai",
           "copilot.microsoft.com",
           "sydney.bing.com",
           "gateway.ai.cloudflare.com"
@@ -152,6 +132,7 @@
         "10.0.0.0/8",
         "172.16.0.0/12",
         "192.168.0.0/16",
+        "169.254.0.0/16",
         "fe80::/10",
         "ff00::/8"
       ],
@@ -201,7 +182,7 @@
           ]
         }
       ],
-      "url": "http://www.gstatic.com/generate_204",
+      "url": "https://www.gstatic.com/generate_204",
       "interval": "10m",
       "idle_timeout": "30m",
       "tolerance": 100
@@ -235,7 +216,7 @@
           ]
         }
       ],
-      "url": "http://www.gstatic.com/generate_204",
+      "url": "https://www.gstatic.com/generate_204",
       "interval": "10m",
       "idle_timeout": "30m",
       "tolerance": 100
@@ -293,6 +274,22 @@
         "action": "reject"
       },
       {
+        "ip_cidr": [
+          "100.64.0.0/10",
+          "fd7a:115c:a1e0::/48"
+        ],
+        "action": "route",
+        "outbound": "ts"
+      },
+      {
+        "domain_suffix": [
+          ".ts.net",
+          ".tailscale.net"
+        ],
+        "action": "route",
+        "outbound": "ts"
+      },
+      {
         "clash_mode": "direct",
         "action": "route",
         "outbound": "direct"
@@ -313,22 +310,6 @@
         "outbound": "direct"
       },
       {
-        "ip_cidr": [
-          "100.64.0.0/10",
-          "fd7a:115c:a1e0::/48"
-        ],
-        "action": "route",
-        "outbound": "ts"
-      },
-      {
-        "domain_suffix": [
-          ".ts.net",
-          ".tailscale.net"
-        ],
-        "action": "route",
-        "outbound": "ts"
-      },
-      {
         "domain_suffix": [
           ".tailscale.com",
           ".tailscale.io"
@@ -343,27 +324,7 @@
       },
       {
         "domain": [
-          "gemini.google.com",
-          "generativelanguage.googleapis.com",
           "aiplatform.googleapis.com",
-          "makersuite.google.com",
-          "aistudio.google.com",
-          "alkalimakersuite-pa.clients6.google.com",
-          "alkalicore-pa.clients6.google.com",
-          "openai.com",
-          "chat.openai.com",
-          "api.openai.com",
-          "platform.openai.com",
-          "auth.openai.com",
-          "cdn.openai.com",
-          "files.oaiusercontent.com",
-          "claude.ai",
-          "api.claude.ai",
-          "anthropic.com",
-          "api.anthropic.com",
-          "statsig.anthropic.com",
-          "console.anthropic.com",
-          "perplexity.ai",
           "copilot.microsoft.com",
           "sydney.bing.com",
           "gateway.ai.cloudflare.com"

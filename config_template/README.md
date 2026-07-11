@@ -52,7 +52,7 @@ config_template/
 
 **Android TS endpoint 配置规则**（与 Linux 不通用）：
 
-- `state_directory` 用相对路径 `tailscale`，会落在 SFA 工作目录 `/sdcard/Android/data/io.nekohasekai.sfa/files/tailscale`（可写）。**不能**用 `$HOME/...`，sing-box 不做 shell 展开，Android 根目录只读，启动会报 `mkdir /.config: read-only file system`
+- `state_directory` 用相对路径 `tailscale`，会落在 SFA 工作目录 `/sdcard/Android/data/io.nekohasekai.sfa/files/tailscale`（可写）。**不能**用 `$HOME/...`：sing-box 对 `state_directory` 做 `os.ExpandEnv()`，Android 下 `$HOME` 未设置会展开成空串，路径变成 `/.config/...` 撞上只读根目录，启动报 `mkdir /.config: read-only file system`
 - **不要**写 `auth_key`。Android GUI 客户端没有环境变量注入入口，留空后 sing-box 会在 SFA 通知栏弹出 Tailscale 登录 URL，浏览器授权即可
 - 用不到 TS 时直接忽略登录通知，sing-box 主体（VPN + 路由）正常工作；TS endpoint 只在路由命中 `100.64.0.0/10` / `.ts.net` 时才会触发
 
@@ -74,28 +74,32 @@ config_template/
 - **strict_route 与桥接虚拟机**：VirtualBox / KVM 桥接网卡上的 VM 网络可能被 `strict_route` 切断。修复：把虚拟机网段（如 `192.168.56.0/24`）加入 `route_exclude_address`
 - **容器/嵌套虚拟化**：若网络异常，`stack` 从 `system` 改回 `mixed`（gvisor 路径换最大兼容性）
 
-**systemd 部署**（仅 Linux）：默认 `state_directory: $HOME/.config/sing-box/tailscale`。systemd 上下文下 `$HOME` 可能未设置或为 `/root`，需在 service 单元里显式声明：
+**systemd 部署**（仅 Linux）：默认 `state_directory: $HOME/.config/sing-box/tailscale`（sing-box 对该字段做 `os.ExpandEnv()` 展开）。systemd 上下文下 `$HOME` 可能未设置或为 `/root`，需在 service 单元里显式声明。
+
+模板里的 `auth_key: "$TS_AUTHKEY"` 是**生成期占位符**，sing-box 自身不展开该字段：在 providers 文件配 `"ts_authkey": "tskey-auth-..."` 由 main.py 注入；不配则生成时自动剥离该字段，运行期走 `TS_AUTHKEY` 环境变量（tsnet 原生读取）或日志里的 login URL 授权。
 
 ```ini
 [Service]
 Environment=HOME=/var/lib/sing-box
+Environment=TS_AUTHKEY=tskey-auth-xxxx
 # 或直接改 config.json 把 state_directory 写成绝对路径
 ```
 
-> Android 模板用的是相对路径 `tailscale`（不展开 `$HOME`），见 §Android。
+> Android 模板用相对路径 `tailscale`（落在 SFA 工作目录），见 §Android。
+
+### DNS 劫持生效前提（macOS / Linux）
+
+`hijack-dns` 只能劫持**进入 sing-box** 的查询。tun 模板出于性能把 RFC1918 排除出 TUN（`route_exclude_address`），若系统 DNS 指向局域网路由器（如 `192.168.1.1`），查询会整体绕过 TUN：明文 DNS 泄漏给 ISP，FakeIP 与 DNS 分流规则全部失效。sniff 靠 SNI 仍能兜住域名路由，所以这种失效**不易察觉**。
+
+- **macOS（CLI）/ Linux**：把系统 DNS 设为任意公网地址（如 `8.8.8.8`），查询即进入 TUN 被劫持，实际上游仍由模板 `dns.servers` 决定
+- **Android（SFA）**：客户端把 VPN DNS 指进 TUN，不受影响
 
 ## AI 路由覆盖
 
-`ai/*` 全部模板优先把以下服务走自建节点：
+全部模板把 AI 服务流量优先送往自建节点，域名维护分两层：
 
-| 服务 | 域名 |
-|---|---|
-| **Anthropic / Claude** | claude.ai, api.claude.ai, anthropic.com, api.anthropic.com, statsig.anthropic.com, console.anthropic.com |
-| **OpenAI** | openai.com, api.openai.com, chat.openai.com, platform.openai.com, auth.openai.com, cdn.openai.com, files.oaiusercontent.com |
-| **Google Gemini** | gemini.google.com, generativelanguage.googleapis.com, aistudio.google.com, aiplatform.googleapis.com, makersuite.google.com |
-| **Perplexity** | perplexity.ai |
-| **Microsoft Copilot** | copilot.microsoft.com, sydney.bing.com |
-| **Cloudflare AI Gateway** | gateway.ai.cloudflare.com |
+- **geosite rule_set**（主力，随上游自动保鲜）：`geosite-openai` / `geosite-anthropic` / `geosite-google-gemini` / `geosite-perplexity`。MetaCubeX meta-rules-dat 编译自 v2fly domain-list-community，按 suffix 匹配，已含 chatgpt.com、sora.com、claude.com 等新域名
+- **模板内联 `domain` 列表**（仅保留 geosite 未覆盖的 4 个，2026-07 对照 srs 反编译核实）：`aiplatform.googleapis.com`（Vertex AI）、`copilot.microsoft.com`、`sydney.bing.com`（Copilot）、`gateway.ai.cloudflare.com`（AI Gateway）
 
 **DeepSeek 说明**：DeepSeek 服务器在中国大陆，命中 `geosite-cn` 后走 `China → direct`，无需加入 AI 分组。
 
@@ -116,7 +120,7 @@ AI 域名 → AI selector → selfBuild (优先) → selfBuildAuto (自动) → 
 | `urltest.interval` | 10m | 自动测速周期 |
 | `urltest.idle_timeout` | 30m | 30 分钟无流量停止测速，省电 |
 | `urltest.tolerance` | 100 ms | 抖动门槛，避免频繁切换 |
-| `tun.route_exclude_address` | RFC1918 + Tailscale + IPv6 link-local | 私有网段不进 TUN |
+| `tun.route_exclude_address` | RFC1918 + link-local（v4/v6）+ Tailscale（仅 macOS） | 私有网段不进 TUN，DNS 前提见 §DNS 劫持生效前提 |
 | `cache_file.store_rdrc` | true | 持久化路由结果集 |
 | `cache_file.store_fakeip` | true（仅 tun + fakeip 时） | 持久化 fakeip 映射 |
 
@@ -134,6 +138,12 @@ AI 域名 → AI selector → selfBuild (优先) → selfBuildAuto (自动) → 
 ```bash
 uv run python3 main.py --template_index <idx> --providers local_providers.json
 sing-box check -c config.json
+```
+
+模板间一致性（ios ≡ macos mixed、android/linux tun 仅差平台字段、AI 内联域名同步）由脚本守护，改模板后跑一遍：
+
+```bash
+python3 tests/check_template_drift.py
 ```
 
 `linux/tun.json` 的 `auto_redirect` 是 Linux 专属字段，**在 macOS / Windows 上跑 check 会报 `initialize auto-redirect: invalid argument`**，需在 Linux 环境验证。

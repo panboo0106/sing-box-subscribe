@@ -94,9 +94,10 @@ config_template/
 
 **Android 配置方式与 Linux 不通用**（2026-06-01 实测补充）：
 
-- sing-box 不做 shell 变量展开。Linux/systemd 上 `state_directory: $HOME/.config/...` 能 work 是靠 systemd 的 `Environment=HOME=...` 注入；**Android GUI 客户端没有这种入口**，`$HOME` 直接当字面量，`mkdir /.config` 撞上 Android 根目录只读 → `post-start endpoint/tailscale[ts]: tsnet: mkdir /.config: read-only file system`
+- sing-box 对 `state_directory` 做 `os.ExpandEnv()`（`protocol/tailscale/endpoint.go`），对 `auth_key` **不做**任何展开。Linux/systemd 上 `state_directory: $HOME/.config/...` 能 work 是靠 systemd 的 `Environment=HOME=...` 注入后由 sing-box 展开；**Android GUI 客户端没有这种入口**，`$HOME` 未设置展开为空串，`mkdir /.config` 撞上 Android 根目录只读 → `post-start endpoint/tailscale[ts]: tsnet: mkdir /.config: read-only file system`（2026-07-11 修正原"不做 shell 展开"的表述）
 - Android 模板的 `state_directory` 必须用相对路径（如 `tailscale`），落到 SFA 工作目录 `/sdcard/Android/data/io.nekohasekai.sfa/files/` 下
 - Android 模板**不写** `auth_key`。sing-box 在 GUI 客户端会弹通知给出 Tailscale 登录 URL，浏览器授权（[官方文档](https://sing-box.sagernet.org/configuration/endpoint/tailscale/)：「By default, sing-box will log the login URL (or popup a notification on graphical clients)」）
+- （2026-07-11 修正）Linux 模板的 `auth_key: "$TS_AUTHKEY"` 是 main.py 的生成期占位符（providers 配 `ts_authkey` 时注入）。sing-box 不展开 `auth_key`，未注入时占位符会漏进最终配置、被 tsnet 当成无效 key——main.py 已改为未注入时自动剥离该字段，运行期由 tsnet 读 `TS_AUTHKEY` 环境变量或走 login URL
 
 **Android 内置 TS 已知风险**（社区报告，可接受范围内）：
 

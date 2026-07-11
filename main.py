@@ -705,5 +705,11 @@ if __name__ == '__main__':
     ts_authkey = providers.get('ts_authkey', '')
     if ts_authkey:
         _replace_var(final_config, '$TS_AUTHKEY', ts_authkey)
+    elif isinstance(final_config, dict):
+        # sing-box 不展开 auth_key，占位符会被 tsnet 当成无效 key；
+        # 未注入时剥离该字段，运行期回落到 TS_AUTHKEY 环境变量或 login URL
+        for endpoint in final_config.get('endpoints', []):
+            if endpoint.get('auth_key') == '$TS_AUTHKEY':
+                del endpoint['auth_key']
     save_config(providers["save_config_path"], final_config)
     # updateLocalConfig('http://127.0.0.1:9090',providers['save_config_path'])
