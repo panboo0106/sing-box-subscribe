@@ -120,7 +120,7 @@ AI 域名 → AI selector → selfBuild (优先) → selfBuildAuto (自动) → 
 | `urltest.interval` | 10m | 自动测速周期 |
 | `urltest.idle_timeout` | 30m | 30 分钟无流量停止测速，省电 |
 | `urltest.tolerance` | 100 ms | 抖动门槛，避免频繁切换 |
-| `tun.route_exclude_address` | RFC1918 + Tailscale + IPv6 link-local | 私有网段不进 TUN |
+| `tun.route_exclude_address` | RFC1918 + link-local（v4/v6）+ Tailscale（仅 macOS） | 私有网段不进 TUN，DNS 前提见 §DNS 劫持生效前提 |
 | `cache_file.store_rdrc` | true | 持久化路由结果集 |
 | `cache_file.store_fakeip` | true（仅 tun + fakeip 时） | 持久化 fakeip 映射 |
 
