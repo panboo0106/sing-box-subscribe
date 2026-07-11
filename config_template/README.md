@@ -87,6 +87,13 @@ Environment=TS_AUTHKEY=tskey-auth-xxxx
 
 > Android 模板用相对路径 `tailscale`（落在 SFA 工作目录），见 §Android。
 
+### DNS 劫持生效前提（macOS / Linux）
+
+`hijack-dns` 只能劫持**进入 sing-box** 的查询。tun 模板出于性能把 RFC1918 排除出 TUN（`route_exclude_address`），若系统 DNS 指向局域网路由器（如 `192.168.1.1`），查询会整体绕过 TUN：明文 DNS 泄漏给 ISP，FakeIP 与 DNS 分流规则全部失效。sniff 靠 SNI 仍能兜住域名路由，所以这种失效**不易察觉**。
+
+- **macOS（CLI）/ Linux**：把系统 DNS 设为任意公网地址（如 `8.8.8.8`），查询即进入 TUN 被劫持，实际上游仍由模板 `dns.servers` 决定
+- **Android（SFA）**：客户端把 VPN DNS 指进 TUN，不受影响
+
 ## AI 路由覆盖
 
 `ai/*` 全部模板优先把以下服务走自建节点：
