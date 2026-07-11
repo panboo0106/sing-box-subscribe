@@ -140,6 +140,12 @@ uv run python3 main.py --template_index <idx> --providers local_providers.json
 sing-box check -c config.json
 ```
 
+模板间一致性（ios ≡ macos mixed、android/linux tun 仅差平台字段、AI 内联域名同步）由脚本守护，改模板后跑一遍：
+
+```bash
+python3 tests/check_template_drift.py
+```
+
 `linux/tun.json` 的 `auto_redirect` 是 Linux 专属字段，**在 macOS / Windows 上跑 check 会报 `initialize auto-redirect: invalid argument`**，需在 Linux 环境验证。
 
 ## 订阅转换示例
