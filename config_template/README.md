@@ -52,7 +52,7 @@ config_template/
 
 **Android TS endpoint 配置规则**（与 Linux 不通用）：
 
-- `state_directory` 用相对路径 `tailscale`，会落在 SFA 工作目录 `/sdcard/Android/data/io.nekohasekai.sfa/files/tailscale`（可写）。**不能**用 `$HOME/...`，sing-box 不做 shell 展开，Android 根目录只读，启动会报 `mkdir /.config: read-only file system`
+- `state_directory` 用相对路径 `tailscale`，会落在 SFA 工作目录 `/sdcard/Android/data/io.nekohasekai.sfa/files/tailscale`（可写）。**不能**用 `$HOME/...`：sing-box 对 `state_directory` 做 `os.ExpandEnv()`，Android 下 `$HOME` 未设置会展开成空串，路径变成 `/.config/...` 撞上只读根目录，启动报 `mkdir /.config: read-only file system`
 - **不要**写 `auth_key`。Android GUI 客户端没有环境变量注入入口，留空后 sing-box 会在 SFA 通知栏弹出 Tailscale 登录 URL，浏览器授权即可
 - 用不到 TS 时直接忽略登录通知，sing-box 主体（VPN + 路由）正常工作；TS endpoint 只在路由命中 `100.64.0.0/10` / `.ts.net` 时才会触发
 
@@ -74,15 +74,18 @@ config_template/
 - **strict_route 与桥接虚拟机**：VirtualBox / KVM 桥接网卡上的 VM 网络可能被 `strict_route` 切断。修复：把虚拟机网段（如 `192.168.56.0/24`）加入 `route_exclude_address`
 - **容器/嵌套虚拟化**：若网络异常，`stack` 从 `system` 改回 `mixed`（gvisor 路径换最大兼容性）
 
-**systemd 部署**（仅 Linux）：默认 `state_directory: $HOME/.config/sing-box/tailscale`。systemd 上下文下 `$HOME` 可能未设置或为 `/root`，需在 service 单元里显式声明：
+**systemd 部署**（仅 Linux）：默认 `state_directory: $HOME/.config/sing-box/tailscale`（sing-box 对该字段做 `os.ExpandEnv()` 展开）。systemd 上下文下 `$HOME` 可能未设置或为 `/root`，需在 service 单元里显式声明。
+
+模板里的 `auth_key: "$TS_AUTHKEY"` 是**生成期占位符**，sing-box 自身不展开该字段：在 providers 文件配 `"ts_authkey": "tskey-auth-..."` 由 main.py 注入；不配则生成时自动剥离该字段，运行期走 `TS_AUTHKEY` 环境变量（tsnet 原生读取）或日志里的 login URL 授权。
 
 ```ini
 [Service]
 Environment=HOME=/var/lib/sing-box
+Environment=TS_AUTHKEY=tskey-auth-xxxx
 # 或直接改 config.json 把 state_directory 写成绝对路径
 ```
 
-> Android 模板用的是相对路径 `tailscale`（不展开 `$HOME`），见 §Android。
+> Android 模板用相对路径 `tailscale`（落在 SFA 工作目录），见 §Android。
 
 ## AI 路由覆盖
 
