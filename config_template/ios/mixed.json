@@ -34,6 +34,10 @@
     ],
     "rules": [
       {
+        "rule_set": "geosite-category-ads-all",
+        "action": "reject"
+      },
+      {
         "clash_mode": "direct",
         "action": "route",
         "server": "local"
