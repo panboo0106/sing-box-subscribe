@@ -46,6 +46,22 @@
     ],
     "rules": [
       {
+        "domain_suffix": [
+          ".ts.net",
+          ".tailscale.net"
+        ],
+        "action": "route",
+        "server": "tailscale-dns"
+      },
+      {
+        "domain_suffix": [
+          ".tailscale.com",
+          ".tailscale.io"
+        ],
+        "action": "route",
+        "server": "remote"
+      },
+      {
         "clash_mode": "direct",
         "action": "route",
         "server": "local"
@@ -62,22 +78,6 @@
         ],
         "action": "route",
         "server": "local"
-      },
-      {
-        "domain_suffix": [
-          ".ts.net",
-          ".tailscale.net"
-        ],
-        "action": "route",
-        "server": "tailscale-dns"
-      },
-      {
-        "domain_suffix": [
-          ".tailscale.com",
-          ".tailscale.io"
-        ],
-        "action": "route",
-        "server": "remote"
       },
       {
         "domain": [
@@ -292,6 +292,22 @@
         "action": "reject"
       },
       {
+        "ip_cidr": [
+          "100.64.0.0/10",
+          "fd7a:115c:a1e0::/48"
+        ],
+        "action": "route",
+        "outbound": "ts"
+      },
+      {
+        "domain_suffix": [
+          ".ts.net",
+          ".tailscale.net"
+        ],
+        "action": "route",
+        "outbound": "ts"
+      },
+      {
         "clash_mode": "direct",
         "action": "route",
         "outbound": "direct"
@@ -310,22 +326,6 @@
         ],
         "action": "route",
         "outbound": "direct"
-      },
-      {
-        "ip_cidr": [
-          "100.64.0.0/10",
-          "fd7a:115c:a1e0::/48"
-        ],
-        "action": "route",
-        "outbound": "ts"
-      },
-      {
-        "domain_suffix": [
-          ".ts.net",
-          ".tailscale.net"
-        ],
-        "action": "route",
-        "outbound": "ts"
       },
       {
         "domain_suffix": [
