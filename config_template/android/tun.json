@@ -150,6 +150,8 @@
       "type": "selector",
       "outbounds": [
         "auto",
+        "🇭🇰香港",
+        "🇺🇸美国",
         "selfBuild",
         "selfBuildAuto",
         "AI",
@@ -161,11 +163,49 @@
       "tag": "AI",
       "type": "selector",
       "outbounds": [
+        "🇺🇸美国",
         "selfBuild",
-        "selfBuildAuto",
         "direct"
       ],
-      "default": "selfBuild"
+      "default": "🇺🇸美国"
+    },
+    {
+      "tag": "🇭🇰香港",
+      "type": "urltest",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "🏠🇭🇰"
+          ]
+        }
+      ],
+      "url": "http://www.gstatic.com/generate_204",
+      "interval": "10m",
+      "idle_timeout": "30m",
+      "tolerance": 100
+    },
+    {
+      "tag": "🇺🇸美国",
+      "type": "urltest",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "🏠🇺🇸"
+          ]
+        }
+      ],
+      "url": "http://www.gstatic.com/generate_204",
+      "interval": "10m",
+      "idle_timeout": "30m",
+      "tolerance": 100
     },
     {
       "tag": "selfBuildAuto",
