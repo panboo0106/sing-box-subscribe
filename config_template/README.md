@@ -7,7 +7,7 @@
 ```
 config_template/
 ├── ios/
-│   └── mixed.json        浏览器代理 / 快捷指令场景
+│   └── tun.json          系统级代理，配合官方 Tailscale App（快捷指令切换）
 ├── macos/
 │   ├── tun.json          系统级代理，配合官方 Tailscale App
 │   └── mixed.json        浏览器代理
@@ -18,13 +18,13 @@ config_template/
 └── README.md
 ```
 
-> 旧路径（`ai/` `streaming/` `minimal/`）已删除。如需历史版本（streaming 分流、minimal 极简），用 `git log` 查找最后含旧目录的 commit 后 `git show <hash>:config_template/streaming/tun.json` 取回。
+> 旧路径（`ai/` `streaming/` `minimal/`）与 `ios/mixed.json` 已删除。如需历史版本（streaming 分流、minimal 极简、iOS mixed），用 `git log` 查找最后含该文件的 commit 后 `git show <hash>:config_template/streaming/tun.json` 取回。
 
 ## 平台 → 模板速查
 
 | 平台 | 推荐 | 备注 |
 |---|---|---|
-| **iOS** | `ios/mixed.json` | SFI 只能跑一个 VPN，搭配 iOS 快捷指令切换 Tailscale App |
+| **iOS** | `ios/tun.json` | SFI 只能跑一个 VPN，用快捷指令在 sing-box 与 Tailscale App 之间切换 |
 | **macOS** | `macos/tun.json` | 配合官方 Tailscale 客户端，NAT 穿透更稳 |
 | **macOS（仅浏览器）** | `macos/mixed.json` | 配合 SwitchyOmega 等插件 |
 | **Windows** | `macos/tun.json` | 同 macOS（不依赖 macOS 特有字段） |
@@ -35,10 +35,11 @@ config_template/
 
 ### iOS
 
-- 只提供 mixed（HTTP/SOCKS5），不提供 tun
-- 完全不含 FakeIP / Tailscale endpoint / `route_exclude_address` 等字段
-- Tailscale 由官方 App 独立运行，不与 sing-box 交互
-- 典型用法：浏览器代理、快捷指令在 sing-box 与 Tailscale 之间切换
+- 只提供 tun（与 `macos/tun.json` 逐字节相同），不再提供 mixed-only 模板——tun 模板内部仍带一个 `mixed-in`，需要时可直接用
+- Tailscale 由官方 App 独立运行，不与 sing-box 交互；快捷指令在两个 VPN profile 之间切换
+- `route_exclude_address` 里的 `100.64.0.0/10` / `fd7a::/48` 在 iOS 上是冗余的（Tailscale 不会与 sing-box 同时运行），保留只为与 macOS 模板保持逐字节一致
+
+**为什么删掉了 `ios/mixed.json`**：iOS 没有全局代理设置——只有 Wi-Fi 逐网络的「配置代理 → 手动」（蜂窝网络完全没有这一项），且只有走 CFNetwork/URLSession 的 app 会遵守。SFI 的核心跑在 Network Extension 里，配置中没有 tun inbound 就没有任何数据包被捕获，`mixed-in` 监听的 `127.0.0.1:7890` 在 iOS 上几乎无人连接，实际等于不工作。「iOS 只能跑一个 VPN」只意味着 sing-box 与 Tailscale App 不能同时开，不意味着 sing-box 不该用 tun。
 
 ### macOS
 
@@ -92,7 +93,7 @@ Environment=TS_AUTHKEY=tskey-auth-xxxx
 `hijack-dns` 只能劫持**进入 sing-box** 的查询。tun 模板出于性能把 RFC1918 排除出 TUN（`route_exclude_address`），若系统 DNS 指向局域网路由器（如 `192.168.1.1`），查询会整体绕过 TUN：明文 DNS 泄漏给 ISP，FakeIP 与 DNS 分流规则全部失效。sniff 靠 SNI 仍能兜住域名路由，所以这种失效**不易察觉**。
 
 - **macOS（CLI）/ Linux**：把系统 DNS 设为任意公网地址（如 `8.8.8.8`），查询即进入 TUN 被劫持，实际上游仍由模板 `dns.servers` 决定
-- **Android（SFA）**：客户端把 VPN DNS 指进 TUN，不受影响
+- **Android（SFA）/ iOS（SFI）**：客户端把 VPN DNS 指进 TUN，不受影响
 
 ## AI 路由覆盖
 
@@ -120,7 +121,7 @@ AI 域名 → AI selector → selfBuild (优先) → selfBuildAuto (自动) → 
 | `urltest.interval` | 10m | 自动测速周期 |
 | `urltest.idle_timeout` | 30m | 30 分钟无流量停止测速，省电 |
 | `urltest.tolerance` | 100 ms | 抖动门槛，避免频繁切换 |
-| `tun.route_exclude_address` | RFC1918 + link-local（v4/v6）+ Tailscale（仅 macOS） | 私有网段不进 TUN，DNS 前提见 §DNS 劫持生效前提 |
+| `tun.route_exclude_address` | RFC1918 + link-local（v4/v6）+ Tailscale（macOS / iOS） | 私有网段不进 TUN，DNS 前提见 §DNS 劫持生效前提 |
 | `cache_file.store_rdrc` | true | 持久化路由结果集 |
 | `cache_file.store_fakeip` | true（仅 tun + fakeip 时） | 持久化 fakeip 映射 |
 
@@ -140,7 +141,7 @@ uv run python3 main.py --template_index <idx> --providers local_providers.json
 sing-box check -c config.json
 ```
 
-模板间一致性（ios ≡ macos mixed、android/linux tun 仅差平台字段、AI 内联域名同步）由脚本守护，改模板后跑一遍：
+模板间一致性（ios ≡ macos tun、android/linux tun 仅差平台字段、AI 内联域名同步）由脚本守护，改模板后跑一遍：
 
 ```bash
 python3 tests/check_template_drift.py
@@ -155,14 +156,14 @@ python3 tests/check_template_drift.py
 uv run python3 main.py --providers local_providers.json
 
 # 或直接指定（--template_index 是 0-based）
-uv run python3 main.py --template_index 4 --providers local_providers.json  # ios/mixed
+uv run python3 main.py --template_index 1 --providers local_providers.json  # ios/tun
 ```
 
 模板序号顺序对应 `find config_template -name "*.json" | sort` 的字母序：
 
 ```
 0: android/tun
-1: ios/mixed
+1: ios/tun
 2: linux/tun
 3: macos/mixed
 4: macos/tun

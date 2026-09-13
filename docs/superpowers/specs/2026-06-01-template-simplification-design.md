@@ -42,7 +42,7 @@ minimal/   1 个：mixed
 ```
 config_template/
 ├── ios/
-│   └── mixed.json        浏览器代理 / 快捷指令场景
+│   └── mixed.json        浏览器代理 / 快捷指令场景（2026-09-13 改为 tun.json，见 §5.1）
 ├── macos/
 │   ├── tun.json          系统级代理，配合官方 Tailscale App
 │   └── mixed.json        浏览器代理
@@ -59,7 +59,7 @@ config_template/
 
 | 模板 | inbound | TUN/FakeIP | 内置 TS endpoint | TS 网段排除 | Linux 优化 |
 |---|---|---|---|---|---|
-| `ios/mixed.json` | mixed | ❌ | ❌ | 不适用 | 不适用 |
+| `ios/tun.json`（原 `ios/mixed.json`，见 §5.1 2026-09-13 推翻） | tun + mixed | ✅ | ❌（用官方 App） | ✅ exclude 100.64.0.0/10 | ❌ |
 | `macos/tun.json` | tun + mixed | ✅ | ❌（用官方 App） | ✅ exclude 100.64.0.0/10 | ❌ |
 | `macos/mixed.json` | mixed | ❌ | ❌ | 不适用 | 不适用 |
 | `android/tun.json` | tun + mixed | ✅ | ✅ | ❌（让 sing-box 路由） | ❌ |
@@ -67,11 +67,19 @@ config_template/
 
 ### 5.1 iOS 特殊处理
 
+> **2026-09-13 推翻**：本节原方案（iOS 只给 mixed、硬性禁止 tun）在实机上等于不工作，已改为「iOS 只给 tun，删除 `ios/mixed.json`」。原文保留在下方供追溯。
+>
+> **推翻理由**：iOS 没有全局代理设置——只有 Wi-Fi 逐网络的手动 HTTP 代理（蜂窝没有），且只有走 CFNetwork/URLSession 的 app 会遵守；SFI 的核心跑在 Network Extension 里，配置没有 tun inbound 就没有任何数据包被捕获，`mixed-in` 的 `127.0.0.1:7890` 无人连接。原推理的错误在于把「iOS 只能跑一个 VPN」读成了「sing-box 不该用 tun」，实际只意味着不能与 Tailscale App 同时开，而快捷指令切的正是两个 VPN profile。
+>
+> **现方案**：`ios/tun.json` 与 `macos/tun.json` 逐字节相同（macOS 那份本就是配合官方 Tailscale App 的无内置 TS 版本），一致性由 `tests/check_template_drift.py` 守护。
+
+原方案（已废弃）：
+
 - 完全不含 TUN/FakeIP/Tailscale 相关字段
 - 仅 mixed inbound，作为浏览器代理或 iOS 快捷指令切换场景
 - Tailscale App 独立运行，不与 sing-box 交互
 
-**iOS 模板的硬性验收清单（同 §9 的人工检查项）**：
+**iOS 模板的硬性验收清单（同 §9 的人工检查项，已随上述推翻作废）**：
 
 - ❌ 无 `dns.fakeip` 块
 - ❌ 无 `inbounds[].type == "tun"` 或任何 tun 相关字段
@@ -222,7 +230,7 @@ sing-box check -c config.json
 
 **linux/tun.json 的跨平台限制**：含 `auto_redirect: true` + `stack: system` 是 Linux 专属 inbound 字段，**不能在 macOS / Windows 上跑 `sing-box check`**（会报 `initialize auto-redirect: invalid argument`，这是 sing-box 的 platform-specific init 行为）。在 macOS 上用 JSON 解析 + 字段审计验证；真正的 init check 需在 Linux 环境执行。
 
-iOS 模板额外人工检查：
+iOS 模板额外人工检查（2026-09-13 作废，见 §5.1；现检查项为「与 `macos/tun.json` 逐字节相同」，由 `tests/check_template_drift.py` 自动守护）：
 
 - 无 `dns.fakeip` 块
 - 无 `inbounds[].type == "tun"` 或 tun 相关字段
