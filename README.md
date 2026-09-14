@@ -177,7 +177,8 @@ docker run -p 5000:5000 sing-box:latest
   "type": "remote",
   "format": "source",
   "url": "https://raw.githubusercontent.com/Toperlock/sing-box-geosite/main/wechat.json",
-  "download_detour": "auto"
+  "http_client": "direct-http"
 }
 ```
+> `http_client` 需 sing-box v1.14+，引用顶层 `http_clients` 里定义的 tag。v1.13 及以下用 `"download_detour": "auto"`（1.14 起弃用，1.16 移除）。
 

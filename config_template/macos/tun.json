@@ -15,7 +15,7 @@
     "cache_file": {
       "enabled": true,
       "store_fakeip": true,
-      "store_rdrc": true
+      "store_dns": true
     }
   },
   "dns": {
@@ -92,9 +92,14 @@
       }
     ],
     "final": "remote",
-    "cache_capacity": 4096,
-    "independent_cache": true
+    "cache_capacity": 4096
   },
+  "http_clients": [
+    {
+      "tag": "direct-http",
+      "detour": "direct"
+    }
+  ],
   "inbounds": [
     {
       "tag": "tun-in",
@@ -267,6 +272,7 @@
     "default_domain_resolver": {
       "server": "local"
     },
+    "default_http_client": "direct-http",
     "rules": [
       {
         "inbound": [
@@ -352,49 +358,49 @@
         "type": "remote",
         "format": "binary",
         "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/category-ads-all.srs",
-        "download_detour": "direct"
+        "http_client": "direct-http"
       },
       {
         "tag": "geosite-openai",
         "type": "remote",
         "format": "binary",
         "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/openai.srs",
-        "download_detour": "direct"
+        "http_client": "direct-http"
       },
       {
         "tag": "geosite-anthropic",
         "type": "remote",
         "format": "binary",
         "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/anthropic.srs",
-        "download_detour": "direct"
+        "http_client": "direct-http"
       },
       {
         "tag": "geosite-google-gemini",
         "type": "remote",
         "format": "binary",
         "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/google-gemini.srs",
-        "download_detour": "direct"
+        "http_client": "direct-http"
       },
       {
         "tag": "geosite-perplexity",
         "type": "remote",
         "format": "binary",
         "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/perplexity.srs",
-        "download_detour": "direct"
+        "http_client": "direct-http"
       },
       {
         "tag": "geoip-cn",
         "type": "remote",
         "format": "binary",
         "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geoip/cn.srs",
-        "download_detour": "direct"
+        "http_client": "direct-http"
       },
       {
         "tag": "geosite-cn",
         "type": "remote",
         "format": "binary",
         "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/cn.srs",
-        "download_detour": "direct"
+        "http_client": "direct-http"
       }
     ]
   }
