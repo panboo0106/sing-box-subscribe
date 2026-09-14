@@ -1,6 +1,6 @@
 # sing-box 配置模板
 
-兼容 sing-box **v1.12+** 的配置模板，按目标平台分目录，全部使用 AI 路由风味。
+兼容 sing-box **v1.14+** 的配置模板，按目标平台分目录，全部使用 AI 路由风味。
 
 ## 目录布局
 
@@ -117,13 +117,29 @@ AI 域名 → AI selector → selfBuild (优先) → selfBuildAuto (自动) → 
 | 项 | 值 | 说明 |
 |---|---|---|
 | `dns.cache_capacity` | 4096 | DNS LRU 缓存，<1024 会被忽略 |
-| `dns.independent_cache` | true | 不同 server 之间缓存隔离 |
 | `urltest.interval` | 10m | 自动测速周期 |
 | `urltest.idle_timeout` | 30m | 30 分钟无流量停止测速，省电 |
 | `urltest.tolerance` | 100 ms | 抖动门槛，避免频繁切换 |
 | `tun.route_exclude_address` | RFC1918 + link-local（v4/v6）+ Tailscale（macOS / iOS） | 私有网段不进 TUN，DNS 前提见 §DNS 劫持生效前提 |
-| `cache_file.store_rdrc` | true | 持久化路由结果集 |
+| `cache_file.store_dns` | true | 持久化 DNS 缓存 |
 | `cache_file.store_fakeip` | true（仅 tun + fakeip 时） | 持久化 fakeip 映射 |
+| `route.default_http_client` | `direct-http` | 规则集下载走 direct，见 §规则集下载 |
+
+## 规则集下载（`http_clients`）
+
+远程规则集（geosite / geoip `.srs`）的下载出站由顶层 `http_clients` 定义、由 `route.default_http_client` 选定：
+
+```json
+"http_clients": [
+  { "tag": "direct-http", "detour": "direct" }
+]
+```
+
+- 模板走 `direct`：`.srs` 托管在 jsDelivr，直连比绕代理快，且避免「代理没起来 → 规则集拉不到 → 路由退化」的启动期循环依赖
+- 每个 `rule_set` 条目另外显式写了 `"http_client": "direct-http"`。虽然与 `default_http_client` 重复，但让单条规则集改走代理时只需改这一行
+- `dial` 字段（`detour` 等）复用 `route.default_domain_resolver`，无需单独配 `domain_resolver`
+
+这是 v1.14 取代 `download_detour` 的写法。**只删 `download_detour` 不够**：只要存在远程规则集而没有显式 `http_clients` + `default_http_client`，1.14 仍会对「隐式默认 HTTP client」告警（1.16 移除该回退）。
 
 ## Clash 控制面安全（`clash_api.secret`）
 
@@ -171,6 +187,18 @@ uv run python3 main.py --template_index 1 --providers local_providers.json  # io
 
 ## sing-box 版本兼容性
 
-- **最低版本**：v1.12.0（DNS 新格式、`action` 字段）
-- **推荐版本**：v1.13.x
+- **最低版本**：v1.14.0（`http_clients` / `route.default_http_client` / `cache_file.store_dns` 都是 1.14 起才有的字段，v1.13 及以下会直接 `unknown field` 解析失败）
+- **推荐版本**：v1.14.x
 - `linux/tun.json` 的 `auto_redirect` 需 v1.10+
+
+### 1.14 弃用项迁移记录
+
+模板已迁完以下三项（1.14.0 弃用、1.16.0 移除，详见 [Deprecated](https://sing-box.sagernet.org/deprecated/)）：
+
+| 旧字段 | 新写法 |
+|---|---|
+| `dns.independent_cache` | 删除（DNS 缓存现在恒按 transport 分键） |
+| `cache_file.store_rdrc` | `cache_file.store_dns` |
+| `rule_set[].download_detour` | `rule_set[].http_client` + 顶层 `http_clients` |
+
+`clash_api.external_ui_download_detour` **没有**被弃用，名字相似但不在迁移范围内，模板保留原样。
