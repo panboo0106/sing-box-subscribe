@@ -1,4 +1,4 @@
-import json, os, tool, time, requests, sys, importlib, argparse, yaml, ruamel.yaml
+import json, os, tool, time, requests, sys, importlib, argparse, yaml, ruamel.yaml, copy
 import re
 from datetime import datetime
 from urllib.parse import urlparse
@@ -644,6 +644,51 @@ def parse_json(value):
         raise argparse.ArgumentTypeError(f"Invalid JSON: {value}")
 
 
+def apply_gh_proxy(config):
+    # 处理github加速
+    if args.gh_proxy_index is not None and str(args.gh_proxy_index).isdigit():
+        gh_proxy_index = int(args.gh_proxy_index)
+        print(gh_proxy_index)
+        urls = [item["url"] for item in config["route"]["rule_set"]]
+        new_urls = set_gh_proxy(urls, gh_proxy_index)
+        for item, new_url in zip(config["route"]["rule_set"], new_urls):
+            item["url"] = new_url
+
+
+def generate_final_config(config, nodes):
+    apply_gh_proxy(config)
+    if providers.get('Only-nodes'):
+        combined_contents = []
+        for sub_tag, contents in nodes.items():
+            # 遍历每个机场的内容
+            for content in contents:
+                # 将内容添加到新列表中
+                combined_contents.append(content)
+        final_config = combined_contents  # 只返回节点信息
+    else:
+        final_config = combin_to_config(config, nodes)  # 节点信息添加到模板
+    # 替换 $TS_AUTHKEY 变量
+    ts_authkey = providers.get('ts_authkey', '')
+    if ts_authkey:
+        _replace_var(final_config, '$TS_AUTHKEY', ts_authkey)
+    elif isinstance(final_config, dict):
+        # sing-box 不展开 auth_key，占位符会被 tsnet 当成无效 key；
+        # 未注入时剥离该字段，运行期回落到 TS_AUTHKEY 环境变量或 login URL
+        for endpoint in final_config.get('endpoints', []):
+            if endpoint.get('auth_key') == '$TS_AUTHKEY':
+                del endpoint['auth_key']
+    return final_config
+
+
+def all_templates_save_path(template_name):
+    save_path = providers.get('save_config_path', 'config.json')
+    dir_name, file_name = os.path.split(save_path)
+    stem = os.path.splitext(file_name)[0] or 'config'
+    # macos/tun -> macos-tun，避免子目录斜杠进入文件名
+    safe_name = template_name.replace('/', '-').replace(os.sep, '-')
+    return os.path.join(dir_name, stem + '_' + safe_name + '.json')
+
+
 if __name__ == '__main__':
     init_parsers()
     parser = argparse.ArgumentParser()
@@ -652,14 +697,30 @@ if __name__ == '__main__':
     parser.add_argument('--gh_proxy_index', type=str, help='github加速链接')
     parser.add_argument('--providers', type=str, default='providers.json',
                         help='指定订阅配置文件路径（默认: providers.json）。使用本地配置文件可防止订阅链接泄露到git仓库')
+    parser.add_argument('--all_templates', action='store_true',
+                        help='生成 config_template 下全部模板，每个模板输出一个配置文件（如 config_macos-tun.json）')
     args = parser.parse_args()
     temp_json_data = args.temp_json_data
-    gh_proxy_index = args.gh_proxy_index
     providers_file = args.providers
     if temp_json_data and temp_json_data != '{}':
         providers = json.loads(temp_json_data)
     else:
         providers = load_json(providers_file)  # 加载本地 providers.json 或用户指定的文件
+    if args.all_templates and not providers.get('Only-nodes') and not providers.get('config_template'):
+        template_list = get_template()
+        if len(template_list) < 1:
+            print('没有找到模板文件')
+            sys.exit()
+        display_template(template_list)
+        nodes = process_subscribes(providers["subscribes"])
+        for template_name in template_list:
+            print('生成模板: \033[33m' + template_name + '.json\033[0m')
+            config = load_json('config_template/' + template_name + '.json')
+            # deepcopy 避免前一个模板的处理（如 $TS_AUTHKEY 替换）污染共享节点
+            final_config = generate_final_config(config, copy.deepcopy(nodes))
+            save_config(all_templates_save_path(template_name), final_config)
+        sys.exit()
+
     if providers.get('config_template'):
         config_template_path = providers['config_template']
         print('选择: \033[33m' + config_template_path + '\033[0m')
@@ -681,35 +742,6 @@ if __name__ == '__main__':
         config = load_json(config_template_path)
     nodes = process_subscribes(providers["subscribes"])
 
-    # 处理github加速
-    if hasattr(args, 'gh_proxy_index') and str(args.gh_proxy_index).isdigit():
-        gh_proxy_index = int(args.gh_proxy_index)
-        print(gh_proxy_index)
-        urls = [item["url"] for item in config["route"]["rule_set"]]
-        new_urls = set_gh_proxy(urls, gh_proxy_index)
-        for item, new_url in zip(config["route"]["rule_set"], new_urls):
-            item["url"] = new_url
-
-
-    if providers.get('Only-nodes'):
-        combined_contents = []
-        for sub_tag, contents in nodes.items():
-            # 遍历每个机场的内容
-            for content in contents:
-                # 将内容添加到新列表中
-                combined_contents.append(content)
-        final_config = combined_contents  # 只返回节点信息
-    else:
-        final_config = combin_to_config(config, nodes)  # 节点信息添加到模板
-    # 替换 $TS_AUTHKEY 变量
-    ts_authkey = providers.get('ts_authkey', '')
-    if ts_authkey:
-        _replace_var(final_config, '$TS_AUTHKEY', ts_authkey)
-    elif isinstance(final_config, dict):
-        # sing-box 不展开 auth_key，占位符会被 tsnet 当成无效 key；
-        # 未注入时剥离该字段，运行期回落到 TS_AUTHKEY 环境变量或 login URL
-        for endpoint in final_config.get('endpoints', []):
-            if endpoint.get('auth_key') == '$TS_AUTHKEY':
-                del endpoint['auth_key']
+    final_config = generate_final_config(config, nodes)
     save_config(providers["save_config_path"], final_config)
     # updateLocalConfig('http://127.0.0.1:9090',providers['save_config_path'])

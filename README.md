@@ -25,6 +25,12 @@ python main.py
 python main.py --template_index=0
 ```
 
+也可以带all_templates参数一次性生成全部模板，每个模板输出一个配置文件（如 `config_macos-tun.json`）：
+
+```
+python main.py --providers ./local_providers.json --all_templates
+```
+
 #### 使用本地配置文件（保护订阅链接）
 
 为了防止订阅链接泄露到 Git 仓库，推荐使用本地配置文件：
