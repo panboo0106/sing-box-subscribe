@@ -20,3 +20,5 @@ local_providers.json
 providers.local.json
 
 config.json
+# --all_templates 批量生成的配置文件（config_<模板名>.json）
+config_*.json
