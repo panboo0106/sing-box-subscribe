@@ -616,6 +616,10 @@ def display_template(tl):
 def select_config_template(tl, selected_template_index=None):
     if args.template_index is not None:
         uip = args.template_index
+        # 拒绝越界/负数序号，避免 IndexError 或被当作倒序索引静默选中
+        if uip < 0 or uip >= len(tl):
+            print('template_index 超出范围：{index}（有效范围 0-{max}）'.format(index=uip, max=len(tl) - 1))
+            sys.exit(1)
     else:
         # print ('Nhập số để chọn mẫu cấu hình tương ứng (nhấn Enter để chọn mẫu cấu hình đầu tiên theo mặc định): ')
         uip = input('输入序号，载入对应config模板（直接回车默认选第一个配置模板）：')
