@@ -277,7 +277,6 @@ def get_content_from_url(url, n=10):
 def get_content_form_file(url):
     print('处理: \033[31m' + url + '\033[0m')
     # print('Đang tải link đăng ký: \033[31m' + url + '\033[0m')
-    # encoding = tool.get_encoding(url)
     file_extension = os.path.splitext(url)[1]  # 获取文件的后缀名
     if file_extension.lower() == '.yaml':
         with open(url, 'rb') as file:
