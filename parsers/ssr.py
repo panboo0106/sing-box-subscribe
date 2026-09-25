@@ -1,11 +1,11 @@
 import tool
+from parsers import common
+
 def parse(data):
-    info = data[6:]
-    if not info or info.isspace():
-        return None
+    info = common.strip_scheme(data)
     try:
         proxy_str = tool.b64Decode(info).decode('utf-8')
-    except:
+    except Exception:
         proxy_str = info
     i = 0
     parts = proxy_str.split(':')
@@ -40,5 +40,5 @@ def parse(data):
         if keyname in pdict.keys():
             keyname = pdict[keyname]
             node[keyname] = tool.b64Decode(key_value[1]).decode('utf-8')
-    node['tag'] = node['tag'] if node.get('tag') else tool.genName()+'_shadowsocksr'
-    return node
+    node['tag'] = common.make_tag(node.get('tag'), 'shadowsocksr')
+    return [node]

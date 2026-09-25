@@ -1,14 +1,5 @@
-import base64,requests,random,string,re,chardet,urllib.parse
-import warnings
-from cryptography.utils import CryptographyDeprecationWarning
-with warnings.catch_warnings(action="ignore", category=CryptographyDeprecationWarning):
-    import paramiko
-from scp import SCPClient
+import base64,requests,random,string,re,urllib.parse
 
-def get_encoding(file):
-    with open(file,'rb') as f:
-        return chardet.detect(f.read())['encoding']
-    
 def saveFile(path,content):
     file = open(path, mode='w',encoding='utf-8')
     file.write(content)
@@ -192,21 +183,11 @@ def noblankLine(data):
                 newdata += '\n'
     return newdata
 
-def firstLine(data):
-    lines = data.splitlines()
-    for line in lines:
-        line = line.strip()
-        if line:
-            return line
-
 def genName(length=8):
     name = ''
     for i in range(length):
         name += random.choice(string.ascii_letters+string.digits)
     return name
-
-def is_ip(str):
-    return re.search(r'^\d+\.\d+\.\d+\.\d+$',str)
 
 def get_protocol(s):
     try:
@@ -228,34 +209,6 @@ def get_protocol(s):
             m = re.search(r'^(.+?)://', s)
         return m.group(1)
 
-def checkKeywords(keywords,str):
-    if not keywords:
-        return False
-    for keyword in keywords:
-        if str.find(keyword)>-1:
-            return True
-    return False
-
-def filterNodes(nodelist,keywords):
-    newlist = []
-    if not keywords:
-        return nodelist
-    for node in nodelist:
-        if not checkKeywords(keywords,node['name']):
-            newlist.append(node)
-        else:
-            print('过滤节点名称 '+node['name'])
-            print('Lọc tên proxy'+node['name'])
-    return newlist
-
-def replaceStr(nodelist,keywords):
-    if not keywords:
-        return nodelist
-    for node in nodelist:
-        for k in keywords:
-            node['name'] = node['name'].replace(k,'').strip()
-    return nodelist
-
 def proDuplicateNodeName(nodes):
     names = []
     for key in nodes.keys():
@@ -267,28 +220,6 @@ def proDuplicateNodeName(nodes):
                 node['tag'] = s + ' ' + str(index)
                 index += 1
             names.append(node['tag'])
-
-def removeNodes(nodelist):
-    newlist = []
-    temp_list=[]
-    i=0
-    for node in nodelist:
-        _node = {'server':node['server'],'port':node['port']}
-        if _node in temp_list:
-            i+=1
-        else:
-            temp_list.append(_node)
-            newlist.append(node)
-    print('去除了 '+str(i)+' 个重复节点')
-    print('Đã xóa các proxy trùng lặp '+str(i))
-    print('实际获取 '+str(len(newlist))+' 个节点')
-    print('Thực tế nhận được '+str(len(newlist))+' proxy')
-    return newlist
-
-def prefixStr(nodelist,prestr):
-    for node in nodelist:
-        node['name'] = prestr+node['name'].strip()
-    return nodelist
 
 def getResponse(url, custom_user_agent=None):
     response = None
@@ -304,33 +235,3 @@ def getResponse(url, custom_user_agent=None):
             return None
     except:
         return None
-    
-class ConfigSSH:
-    server = {'ip':None,'port':22,'user':None,'password':''}
-    def __init__(self,server:dict) -> None:
-        for k in self.server:
-            if k != 'port' and not k in server.keys():
-                return None
-            if k in server.keys():
-                self.server[k] = server[k]
-    def connect(self):
-        ssh = paramiko.SSHClient()
-        ssh.load_system_host_keys()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(hostname=self.server['ip'],port=22, username=self.server['user'], password=self.server['password'])
-        self.ssh = ssh
-
-    def execCMD(self,command:str):
-        stdin, stdout, stderr = self.ssh.exec_command(command) 
-        print(stdout.read().decode('utf-8')) 
-
-    def uploadFile(self,source:str,target:str):
-        scp = SCPClient(self.ssh.get_transport())
-        scp.put(source, recursive=True, remote_path=target)
-
-    def getFile(self,remote:str,local:str):
-        scp = SCPClient(self.ssh.get_transport())
-        scp.get(remote,local)
-
-    def close(self):
-        self.ssh.close()

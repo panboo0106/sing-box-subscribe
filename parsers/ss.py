@@ -1,9 +1,12 @@
-import tool,json,re,urllib
+import json,re,urllib
+import tool
 from urllib.parse import parse_qs
+from parsers import common
+from parsers.common import ParseError
+
 def parse(data):
-    param = data[5:]
-    if not param or param.isspace():
-        return None
+    raw_param = common.strip_scheme(data)
+    param = raw_param
     node = {
         'tag':tool.genName()+'_shadowsocks',
         'type':'shadowsocks',
@@ -44,23 +47,23 @@ def parse(data):
         node['plugin_opts'] = result_str
     elif param.find('v2ray-plugin') > -1:
         if param.find('&', param.find('v2ray-plugin')) > -1:
-            try:
-                plugin = tool.b64Decode(param[param.find('v2ray-plugin')+13:param.find('&', param.find('v2ray-plugin'))]).decode('utf-8')
-            except:
-                plugin = urllib.parse.unquote(param[param.find('v2ray-plugin')+15:param.find('&', param.find('v2ray-plugin'))])
-                pairs = [pair.split('=') for pair in plugin.split(';') if '=' in pair and pair.count('=') == 1]
-                plugin = str({key: value for key, value in pairs})
+            raw = param[param.find('v2ray-plugin')+13:param.find('&', param.find('v2ray-plugin'))]
+            raw_fallback = param[param.find('v2ray-plugin')+15:param.find('&', param.find('v2ray-plugin'))]
         else:
-            try:
-                plugin = tool.b64Decode(param[param.find('v2ray-plugin')+13:]).decode('utf-8')
-            except:
-                plugin = urllib.parse.unquote(param[param.find('v2ray-plugin')+15:])
-                pairs = [pair.split('=') for pair in plugin.split(';') if '=' in pair and pair.count('=') == 1]
-                plugin = str({key: value for key, value in pairs})
+            raw = param[param.find('v2ray-plugin')+13:]
+            raw_fallback = param[param.find('v2ray-plugin')+15:]
+        try:
+            decoded = tool.b64Decode(raw).decode('utf-8')
+        except Exception:
+            decoded = None
+        if decoded is not None:
+            # 旧实现在此处 eval 订阅内容，可执行任意代码；现在解析失败按 ParseError 单点跳过
+            plugin = common.loads_lenient(decoded)
+        else:
+            pairs = [pair.split('=') for pair in urllib.parse.unquote(raw_fallback).split(';') if '=' in pair and pair.count('=') == 1]
+            plugin = {key: value for key, value in pairs}
         param = param[:param.find('?')]
         node['plugin'] = 'v2ray-plugin'
-        plugin = plugin.replace('true', '1').replace('false', '0')
-        plugin = eval(plugin)
         result_str = "mode={};{}{}{}{}{}{}{}".format(
             plugin.get("mode", ''),
             'host={};'.format(plugin["host"]) if plugin.get("host") else '',
@@ -72,66 +75,54 @@ def parse(data):
             '{};'.format('tls') if plugin.get("tls") == 1 else '',
         )
         node['plugin_opts'] = result_str
-    if data[5:].find('protocol') > -1:
-        smux = data[5:][data[5:].find('protocol'):]
-        smux_dict = parse_qs(smux.split('#')[0])
-        smux_dict = {k: v[0] for k, v in smux_dict.items() if v[0]}
-        node['multiplex'] = {
-            'enabled': True,
-            'protocol': smux_dict['protocol']
-        }
-        if smux_dict.get('max-streams'):
-            node['multiplex']['max_streams'] = int(smux_dict['max-streams'])
-        else:
-            node['multiplex']['max_connections'] = int(smux_dict['max-connections'])
-            node['multiplex']['min_streams'] = int(smux_dict['min-streams'])
-        if smux_dict.get('padding') == 'True':
-            node['multiplex']['padding'] = True
+    if raw_param.find('protocol') > -1:
+        smux = raw_param[raw_param.find('protocol'):]
+        smux_dict = {k: v[0] for k, v in parse_qs(smux.split('#')[0]).items() if v[0]}
+        multiplex = common.build_multiplex(smux_dict)
+        if multiplex:
+            node['multiplex'] = multiplex
     try: #fuck
         param = param.split('?')[0]
         matcher = tool.b64Decode(param) #保留'/'测试能不能解码
-    except:
+    except Exception:
         param = param.split('/')[0].split('?')[0] #不能解码说明'/'不是base64内容
     if param.find('@') > -1:
         matcher = re.match(r'(.*?)@(.*):(.*)', param)
-        if matcher:
-            param = matcher.group(1)
-            node['server'] = matcher.group(2)
-            node['server_port'] = matcher.group(3).split('&')[0]
-        else:
-            return None
+        if not matcher:
+            raise ParseError('ss URI 不符合 [userinfo]@server:port')
+        param = matcher.group(1)
+        node['server'] = matcher.group(2)
+        node['server_port'] = matcher.group(3).split('&')[0]
         try:
-          matcher = re.match(r'(.*?):(.*)', tool.b64Decode(param).decode('utf-8'))
-          if matcher:
-              node['method'] = matcher.group(1)
-              node['password'] = matcher.group(2)
-          else:
-              return None
-        except:
-          matcher = re.match(r'(.*?):(.*)', param)
-          if matcher:
-              node['method'] = matcher.group(1)
-              node['password'] = matcher.group(2)
-          else:
-              return None
+            decoded = tool.b64Decode(param).decode('utf-8')
+        except Exception:
+            decoded = None
+        matcher = re.match(r'(.*?):(.*)', decoded if decoded is not None else param)
+        if not matcher:
+            raise ParseError('ss userinfo 缺少 method:password')
+        node['method'] = matcher.group(1)
+        node['password'] = matcher.group(2)
     else:
-        matcher = re.match(r'(.*?):(.*)@(.*):(.*)', tool.b64Decode(param).decode('utf-8'))
-        if matcher:
-            node['method'] = matcher.group(1)
-            node['password'] = matcher.group(2)
-            node['server'] = matcher.group(3)
-            node['server_port'] = matcher.group(4).split('&')[0]
-        else:
-            return None
+        try:
+            decoded = tool.b64Decode(param).decode('utf-8')
+        except Exception:
+            raise ParseError('ss URI 无法按 base64(method:pass@server:port) 解码')
+        matcher = re.match(r'(.*?):(.*)@(.*):(.*)', decoded)
+        if not matcher:
+            raise ParseError('ss URI 不符合 base64(method:pass@server:port)')
+        node['method'] = matcher.group(1)
+        node['password'] = matcher.group(2)
+        node['server'] = matcher.group(3)
+        node['server_port'] = matcher.group(4).split('&')[0]
     node['server_port'] = int(re.search(r'\d+', node['server_port']).group())
-    param2 = data[5:]
-    if param2.find('shadow-tls') > -1:
+    if raw_param.find('shadow-tls') > -1:
         flag = 1
-        if param2.find('&', param2.find('shadow-tls')) > -1:
-            plugin = tool.b64Decode(param2[param2.find('shadow-tls')+11:param2.find('&', param2.find('shadow-tls'))].split('#')[0]).decode('utf-8')
+        if raw_param.find('&', raw_param.find('shadow-tls')) > -1:
+            raw_tls = raw_param[raw_param.find('shadow-tls')+11:raw_param.find('&', raw_param.find('shadow-tls'))].split('#')[0]
         else:
-            plugin = tool.b64Decode(param2[param2.find('shadow-tls')+11:].split('#')[0]).decode('utf-8')
-        plugin = eval(plugin.replace('true','True'))
+            raw_tls = raw_param[raw_param.find('shadow-tls')+11:].split('#')[0]
+        # 同 v2ray-plugin：旧实现 eval，现在安全解析
+        plugin = common.loads_lenient(tool.b64Decode(raw_tls).decode('utf-8'))
         node['detour'] = node['tag']+'_shadowtls'
         node_tls = {
             'tag':node['detour'],
@@ -161,6 +152,5 @@ def parse(data):
     elif node['method'] == 'xchacha20-poly1305':
         node['method'] = 'xchacha20-ietf-poly1305'
     if flag:
-        return node,node_tls
-    else:
-        return node
+        return [node, node_tls]
+    return [node]

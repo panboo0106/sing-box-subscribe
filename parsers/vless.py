@@ -1,32 +1,26 @@
-import tool,re
-from urllib.parse import urlparse, parse_qs, unquote
+import re
+from urllib.parse import urlparse
+from parsers import common
+from parsers.common import ParseError
+
 def parse(data):
-    info = data[:]
-    server_info = urlparse(info)
-    try:
-        netloc = tool.b64Decode(server_info.netloc).decode('utf-8')
-    except:
-        netloc = server_info.netloc
+    server_info = urlparse(data)
+    netloc = common.maybe_b64decode(server_info.netloc)
     _netloc = netloc.split("@")
-    try:
-        _netloc_parts = _netloc[1].rsplit(":", 1)
-    except:
-        return None
-    if _netloc_parts[1].isdigit(): #fuck
-        server = re.sub(r"\[|\]", "", _netloc_parts[0])
-        server_port = int(_netloc_parts[1])
-    else:
-        return None
-    netquery = dict(
-        (k, v if len(v) > 1 else v[0])
-        for k, v in parse_qs(server_info.query).items()
-    )
+    if len(_netloc) < 2:
+        raise ParseError('vless URI 缺少 uuid@server')
+    _netloc_parts = _netloc[1].rsplit(":", 1)
+    if len(_netloc_parts) < 2 or not _netloc_parts[1].isdigit(): #fuck
+        raise ParseError('vless URI 端口非法')
+    server = common.clean_host(_netloc_parts[0])
+    server_port = int(_netloc_parts[1])
+    netquery = common.parse_query(server_info.query)
     if netquery.get('remarks'):
         remarks = netquery['remarks']
     else:
         remarks = server_info.fragment
     node = {
-        'tag': unquote(remarks) or tool.genName()+'_vless',
+        'tag': common.make_tag(remarks, 'vless'),
         'type': 'vless',
         'server': server,
         'server_port': server_port,
@@ -38,11 +32,9 @@ def parse(data):
     if netquery.get('security', '') not in ['None', 'none', ''] or netquery.get('tls') == '1':
         node['tls'] = {
             'enabled': True,
-            'insecure': False,
+            'insecure': common.insecure_from_query(netquery),
             'server_name': ''
         }
-        if netquery.get('allowInsecure') == '1':
-            node['tls']['insecure'] = True
         node['tls']['server_name'] = netquery.get('sni', '') or netquery.get('peer', '')
         if node['tls']['server_name'] == 'None':
             node['tls']['server_name'] = ''
@@ -106,16 +98,7 @@ def parse(data):
             if matches:
                 node['transport']['early_data_header_name'] = 'Sec-WebSocket-Protocol'
                 node['transport']['max_early_data'] = int(netquery.get('path', '/').rsplit("?ed=", 1)[1])
-    if netquery.get('protocol') in ['smux', 'yamux', 'h2mux']:
-        node['multiplex'] = {
-            'enabled': True,
-            'protocol': netquery['protocol']
-        }
-        if netquery.get('max-streams'):
-            node['multiplex']['max_streams'] = int(netquery['max-streams'])
-        else:
-            node['multiplex']['max_connections'] = int(netquery['max-connections'])
-            node['multiplex']['min_streams'] = int(netquery['min-streams'])
-        if netquery.get('padding') == 'True':
-            node['multiplex']['padding'] = True
-    return node
+    multiplex = common.build_multiplex(netquery)
+    if multiplex:
+        node['multiplex'] = multiplex
+    return [node]
