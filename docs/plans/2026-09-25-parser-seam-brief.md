@@ -21,7 +21,7 @@
 - 解析失败:旧行为重复追加上一节点(首条失败则 UnboundLocalError 崩溃)→ 新行为跳过并打印协议名。
 - insecure 语义统一:各解析器统一接受 `insecure/allowInsecure/allow_insecure` 的 `1/true/yes/on`(旧:trojan 只认 allowInsecure=1,hysteria2 认 insecure∈{1,true} 等)。vmess 的反向逻辑(tls 默认 insecure)保持原样。
 - multiplex 块:旧代码缺 `max-streams` 且缺 `max-connections` 时 KeyError(节点被吞)→ 新代码只写存在的字段,sing-box 用默认值。
-- tuic 的 tag 现在做 URL 解码(与其他协议一致)。
+- tuic 与 http 的 tag 现在做 URL 解码(与其他协议一致;此前仅这两个不解码,`%20` 会原样进 tag)。
 - wg 缺 `ip/address` 参数:旧 TypeError → 新 ParseError(同样被跳过,但走单点策略)。
 - ss 的 v2ray-plugin/shadow-tls 字典:`eval` → `json.loads` 优先、`ast.literal_eval` 回退;`True == 1` 使下游 `== 1` 判断行为不变。
 

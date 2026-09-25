@@ -1,31 +1,25 @@
-import tool,re
-from urllib.parse import urlparse, parse_qs, unquote
+import re
+from urllib.parse import urlparse
+from parsers import common
+from parsers.common import ParseError
+
 def parse(data):
-    info = data[:]
-    server_info = urlparse(info)
-    if server_info.path:
-      server_info = server_info._replace(netloc=server_info.netloc + server_info.path, path="")
-    if '@' in server_info.netloc:
-        _netloc = server_info.netloc.rsplit("@", 1)
-    else:
-        return None
-    netquery = dict(
-        (k, v if len(v) > 1 else v[0])
-        for k, v in parse_qs(server_info.query).items()
-    )
+    server_info = common.netloc_with_path(urlparse(data))
+    if '@' not in server_info.netloc:
+        raise ParseError('trojan URI 缺少 password@server')
+    _netloc = server_info.netloc.rsplit("@", 1)
+    netquery = common.parse_query(server_info.query)
     node = {
-        'tag': unquote(server_info.fragment) or tool.genName()+'_trojan',
+        'tag': common.make_tag(server_info.fragment, 'trojan'),
         'type': 'trojan',
-        'server': re.sub(r"\[|\]", "", _netloc[1].rsplit(":", 1)[0]),
-        'server_port': int(_netloc[1].rsplit(":", 1)[1].split("/")[0]),
+        'server': common.clean_host(_netloc[1].rsplit(":", 1)[0]),
+        'server_port': common.first_port(_netloc[1].rsplit(":", 1)[1]),
         'password': _netloc[0],
         'tls': {
             'enabled': True,
-            'insecure': False
+            'insecure': common.insecure_from_query(netquery)
         }
     }
-    if netquery.get('allowInsecure') == '1':
-        node['tls']['insecure'] = True
     if netquery.get('alpn'):
         node['tls']['alpn'] = netquery.get('alpn').strip('{}').split(',')
     if netquery.get('sni'):
@@ -57,16 +51,7 @@ def parse(data):
                 'type':'grpc',
                 'service_name':netquery.get('serviceName', '')
             }
-    if netquery.get('protocol') in ['smux', 'yamux', 'h2mux']:
-        node['multiplex'] = {
-            'enabled': True,
-            'protocol': netquery['protocol']
-        }
-        if netquery.get('max-streams'):
-            node['multiplex']['max_streams'] = int(netquery['max-streams'])
-        else:
-            node['multiplex']['max_connections'] = int(netquery['max-connections'])
-            node['multiplex']['min_streams'] = int(netquery['min-streams'])
-        if netquery.get('padding') == 'True':
-            node['multiplex']['padding'] = True
-    return node
+    multiplex = common.build_multiplex(netquery)
+    if multiplex:
+        node['multiplex'] = multiplex
+    return [node]

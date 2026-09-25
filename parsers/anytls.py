@@ -1,23 +1,20 @@
-import tool,re
-from urllib.parse import urlparse, parse_qs, unquote
+from urllib.parse import urlparse
+from parsers import common
 
 def parse(data):
-    info = data[:]
-    server_info = urlparse(info)
-    netquery = dict(
-        (k, v if len(v) > 1 else v[0])
-        for k, v in parse_qs(server_info.query).items()
-    )
+    server_info = urlparse(data)
+    netquery = common.parse_query(server_info.query)
+    netloc = server_info.netloc
     node = {
-        'tag': unquote(server_info.fragment) or tool.genName()+'_anytls',
+        'tag': common.make_tag(server_info.fragment, 'anytls'),
         'type': 'anytls',
-        'server': re.sub(r"\[|\]", "", server_info.netloc.split("@")[-1].rsplit(":", 1)[0]),
-        'server_port': int((server_info.netloc.rsplit(":", 1)[1]).split(",", 1)[0]), #fuck all
-        'password': netquery['auth'] if netquery.get('auth') else server_info.netloc.split("@")[0].rsplit(":", 1)[-1],
+        'server': common.clean_host(netloc.split("@")[-1].rsplit(":", 1)[0]),
+        'server_port': common.first_port(netloc.rsplit(":", 1)[1]), #fuck all
+        'password': netquery['auth'] if netquery.get('auth') else netloc.split("@")[0].rsplit(":", 1)[-1],
         'tls': {
             'enabled': True,
             'server_name': netquery.get('sni', netquery.get('peer', '')),
-            'insecure': False
+            'insecure': common.insecure_from_query(netquery)
         }
     }
     if netquery.get('idleSessionCheckInterval'):
@@ -33,6 +30,4 @@ def parse(data):
         }
     if netquery.get('alpn'):
         node['tls']['alpn'] = netquery['alpn'].strip('{}').split(',')
-    if netquery.get('insecure') == '1' or netquery.get('allowInsecure') == '1':
-        node['tls']['insecure'] = True
-    return node
+    return [node]

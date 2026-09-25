@@ -1,26 +1,21 @@
-import tool,re
-from urllib.parse import urlparse, parse_qs, unquote
+import re
+from urllib.parse import urlparse
+from parsers import common
 
 def parse(data):
-    info = data[:]
-    server_info = urlparse(info)
-    netquery = dict(
-        (k, v if len(v) > 1 else v[0])
-        for k, v in parse_qs(server_info.query).items()
-    )
-    if server_info.path:
-      server_info = server_info._replace(netloc=server_info.netloc + server_info.path, path="")
+    server_info = common.netloc_with_path(urlparse(data))
+    netquery = common.parse_query(server_info.query)
     ports_match = re.search(r',(\d+-\d+)', server_info.netloc)
     node = {
-        'tag': unquote(server_info.fragment) or tool.genName()+'_hysteria2',
+        'tag': common.make_tag(server_info.fragment, 'hysteria2'),
         'type': 'hysteria2',
-        'server': re.sub(r"\[|\]", "", server_info.netloc.split("@")[-1].rsplit(":", 1)[0]),
-        'server_port': int(re.search(r'\d+', server_info.netloc.rsplit(":", 1)[-1].split(",")[0]).group()),
+        'server': common.clean_host(server_info.netloc.split("@")[-1].rsplit(":", 1)[0]),
+        'server_port': common.first_port(server_info.netloc.rsplit(":", 1)[-1]),
         "password": netquery['auth'] if netquery.get('auth') else server_info.netloc.split("@")[0].rsplit(":", 1)[-1],
         'tls': {
             'enabled': True,
             'server_name': netquery.get('sni', netquery.get('peer', '')),
-            'insecure': False
+            'insecure': common.insecure_from_query(netquery)
         }
     }
     # Pin bandwidth (Brutal CC) only when the URI explicitly requests it; otherwise
@@ -34,8 +29,6 @@ def parse(data):
         node['server_ports'] = [ports_match.group(1).replace('-', ':')]
     elif re.match(r'^\d+-\d+$', netquery.get('mport', '')):
         node['server_ports'] = [netquery['mport'].replace('-', ':')]
-    if netquery.get('insecure') in ['1', 'true'] or netquery.get('allowInsecure') == '1':
-        node['tls']['insecure'] = True
     if not node['tls'].get('server_name'):
         del node['tls']['server_name']
         node['tls']['insecure'] = True
@@ -47,4 +40,4 @@ def parse(data):
             'type': netquery['obfs'],
             'password': netquery['obfs-password'],
         }
-    return (node)
+    return [node]

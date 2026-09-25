@@ -1,71 +1,66 @@
-import tool,json,re
-from urllib.parse import urlparse, parse_qs
+import json,re
+import tool
+from urllib.parse import urlparse
+from parsers import common
+from parsers.common import ParseError
+
 def parse(data):
-    info = data[8:]
-    if not info or info.isspace():
-        return None
-    try:
-        if info.find('?') > -1: #fuck奇葩的URI格式
-            server_info = urlparse(info)
-            netquery = dict(
-                (k, v if len(v) > 1 else v[0])
-                for k, v in parse_qs(server_info.query).items()
-            )
-            try:
-                _path = tool.b64Decode(server_info.path).decode('utf-8').split("@")
-            except:
-                _path = (server_info.path).split("@")
-            node = {
-                'tag': netquery.get('remarks', tool.genName()+'_vmess'),
-                'type': 'vmess',
-                'server': _path[1].split(":")[0],
-                'server_port': int(_path[1].split(":")[1]),
-                'uuid': _path[0].split(":")[-1],
-                'security': _path[0].split(":")[0] if ':' in _path[0] else 'auto',
-                'alter_id': int(netquery.get('alterId','0')),
-                'packet_encoding': 'xudp'
+    info = common.strip_scheme(data)
+    if info.find('?') > -1: #fuck奇葩的URI格式
+        server_info = urlparse(info)
+        netquery = common.parse_query(server_info.query)
+        try:
+            _path = tool.b64Decode(server_info.path).decode('utf-8').split("@")
+        except Exception:
+            _path = (server_info.path).split("@")
+        node = {
+            'tag': netquery.get('remarks', tool.genName()+'_vmess'),
+            'type': 'vmess',
+            'server': _path[1].split(":")[0],
+            'server_port': int(_path[1].split(":")[1]),
+            'uuid': _path[0].split(":")[-1],
+            'security': _path[0].split(":")[0] if ':' in _path[0] else 'auto',
+            'alter_id': int(netquery.get('alterId','0')),
+            'packet_encoding': 'xudp'
+        }
+        if (netquery.get('tls') and netquery['tls'] != '') or (netquery.get('security') == 'tls'):
+            node['tls']={
+                'enabled': True,
+                'insecure': True,
+                'server_name': netquery.get('peer', '')
             }
-            if (netquery.get('tls') and netquery['tls'] != '') or (netquery.get('security') == 'tls'):
-                node['tls']={
+            if netquery.get('allowInsecure') == 0:
+                node['tls']['insecure'] = False
+            if netquery.get('sni'):
+                node['tls']['server_name'] = netquery['sni']
+                node['tls']['utls'] = {
                     'enabled': True,
-                    'insecure': True,
-                    'server_name': netquery.get('peer', '')
+                    'fingerprint': netquery.get('fp', 'chrome')
                 }
-                if netquery.get('allowInsecure') == 0:
-                    node['tls']['insecure'] = False
-                if netquery.get('sni'):
-                    node['tls']['server_name'] = netquery['sni']
-                    node['tls']['utls'] = {
-                        'enabled': True,
-                        'fingerprint': netquery.get('fp', 'chrome')
-                    }
-            if (netquery.get('obfs') == 'websocket') or (netquery.get('type') == 'ws'):
-                # matches = re.search(r'\?ed=(\d+)$', netquery.get('path', '/'))
-                node['transport'] = {
-                    'type': 'ws',
-                    'path': netquery.get('path', '/').rsplit("?ed=", 1)[0],
-                    'headers': {
-                        'Host': netquery.get('host', '')  # 如果 'obfsParam' 不存在或解析失败，使用 'host' 字段
-                    }
+        if (netquery.get('obfs') == 'websocket') or (netquery.get('type') == 'ws'):
+            node['transport'] = {
+                'type': 'ws',
+                'path': netquery.get('path', '/').rsplit("?ed=", 1)[0],
+                'headers': {
+                    'Host': netquery.get('host', '')  # 如果 'obfsParam' 不存在或解析失败，使用 'host' 字段
                 }
-                
-                obfs_param = netquery.get('obfsParam', '')
-                try:
-                    obfs_param_json = json.loads(obfs_param)
-                    host_from_obfs_param = obfs_param_json.get('Host', '')
-                    node['transport']['headers']['Host'] = host_from_obfs_param or netquery.get('host', '')
-                except json.JSONDecodeError:
-                    pass  # JSON 解码失败时忽略异常
-            return node
-        else:
-            proxy_str = tool.b64Decode(info).decode('utf-8')
-    except:
-        print(info)
-        return None
+            }
+            obfs_param = netquery.get('obfsParam', '')
+            try:
+                obfs_param_json = json.loads(obfs_param)
+                host_from_obfs_param = obfs_param_json.get('Host', '')
+                node['transport']['headers']['Host'] = host_from_obfs_param or netquery.get('host', '')
+            except json.JSONDecodeError:
+                pass  # JSON 解码失败时忽略异常
+        return [node]
+    try:
+        proxy_str = tool.b64Decode(info).decode('utf-8')
+    except Exception:
+        raise ParseError('vmess URI 不是合法 base64')
     try:
         item = json.loads(proxy_str)
-    except:
-        return None
+    except Exception:
+        raise ParseError('vmess 载荷不是合法 JSON')
     content = item.get('ps').strip() if item.get('ps') else tool.genName()+'_vmess'
     node = {
         'tag': content,
@@ -135,16 +130,7 @@ def parse(data):
                 'type':'grpc',
                 'service_name':item.get('path', '')
             }
-    if item.get('protocol') in ['smux', 'yamux', 'h2mux']:
-        node['multiplex'] = {
-            'enabled': True,
-            'protocol': item['protocol']
-        }
-        if item.get('max_streams'):
-            node['multiplex']['max_streams'] = int(item['max_streams'])
-        else:
-            node['multiplex']['max_connections'] = int(item['max_connections'])
-            node['multiplex']['min_streams'] = int(item['min_streams'])
-        if item.get('padding') == True:
-            node['multiplex']['padding'] = True
-    return node
+    multiplex = common.build_multiplex(item)
+    if multiplex:
+        node['multiplex'] = multiplex
+    return [node]

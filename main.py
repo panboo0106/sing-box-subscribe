@@ -145,16 +145,10 @@ def get_nodes(url):
     if not urlstr.scheme:
         try:
             content = tool.b64Decode(url).decode('utf-8')
-            data = parse_content(content)
-            processed_list = []
-            for item in data:
-                if isinstance(item, tuple):
-                    processed_list.extend([item[0], item[1]])  # 处理shadowtls
-                else:
-                    processed_list.append(item)
-            return processed_list
         except:
             content = get_content_form_file(url)
+        else:
+            return parse_content(content)
     else:
         content = get_content_from_url(url)
     # print (content)
@@ -163,15 +157,7 @@ def get_nodes(url):
             share_links = []
             for proxy in content['proxies']:
                 share_links.append(clash2v2ray(proxy))
-            data = '\n'.join(share_links)
-            data = parse_content(data)
-            processed_list = []
-            for item in data:
-                if isinstance(item, tuple):
-                    processed_list.extend([item[0], item[1]])  # 处理shadowtls
-                else:
-                    processed_list.append(item)
-            return processed_list
+            return parse_content('\n'.join(share_links))
         elif 'outbounds' in content:
             outbounds = []
             excluded_types = {"selector", "urltest", "direct", "block", "dns"}
@@ -179,21 +165,10 @@ def get_nodes(url):
             outbounds.extend(filtered_outbounds)
             return outbounds
     else:
-        data = parse_content(content)
-        processed_list = []
-        for item in data:
-            if isinstance(item, tuple):
-                processed_list.extend([item[0], item[1]])  # 处理shadowtls
-            else:
-                processed_list.append(item)
-        return processed_list
+        return parse_content(content)
 
 
 def parse_content(content):
-    # firstline = tool.firstLine(content)
-    # # print(firstline)
-    # if not get_parser(firstline):
-    #     return None
     nodelist = []
     for t in content.splitlines():
         t = t.strip()
@@ -203,11 +178,12 @@ def parse_content(content):
         if not factory:
             continue
         try:
-            node = factory(t)
-        except Exception as e:  #节点解析失败，跳过
-            pass
-        if node:
-            nodelist.append(node)
+            nodes = factory(t)
+        except Exception:
+            # 坏节点策略单点：跳过并继续。不回显 URI 内容（含密码），只报协议名
+            print('解析 {} 节点失败，已跳过'.format(tool.get_protocol(t) or '未知'))
+            continue
+        nodelist.extend(nodes)
     return nodelist
 
 
