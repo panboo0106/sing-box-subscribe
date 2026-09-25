@@ -3,7 +3,6 @@ import re
 from datetime import datetime
 from urllib.parse import urlparse
 from collections import OrderedDict
-from api.app import TEMP_DIR
 from parsers.clash2base64 import clash2v2ray
 from gh_proxy_helper import set_gh_proxy
 
