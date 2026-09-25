@@ -200,7 +200,9 @@ def get_parser(node):
                 return None
     if not proto or proto not in parsers_mod.keys():
         return None
-    return parsers_mod[proto].parse
+    # common/clash2base64 等非协议模块也会被 init_parsers 扫进 parsers_mod；
+    # 订阅内容里出现 "common://" 之类的行应跳过，而不是 AttributeError 中断整个生成
+    return getattr(parsers_mod[proto], 'parse', None)
 
 
 def get_content_from_url(url, n=10):

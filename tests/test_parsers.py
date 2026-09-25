@@ -291,6 +291,21 @@ def test_parse_content_flattens_shadowtls():
     assert nodes[0]["detour"] == nodes[1]["tag"]
 
 
+def test_parse_content_skips_non_protocol_module_lines():
+    import main
+    main.init_parsers()
+    main.providers = {}
+    # common/clash2base64 等非协议模块也在 parsers_mod 里；此类行应跳过，
+    # 而不是 AttributeError 中断整个生成（get_parser 在 try 之外被调用）
+    content = "\n".join([
+        "common://whatever",
+        "clash2base64://whatever",
+        "trojan://p1@1.1.1.1:443#NodeA",
+    ])
+    nodes = main.parse_content(content)
+    assert [n["tag"] for n in nodes] == ["NodeA"]
+
+
 def main_check():
     tests = [(name, fn) for name, fn in sorted(globals().items()) if name.startswith("test_")]
     for name, fn in tests:

@@ -20,8 +20,10 @@
 
 - 解析失败:旧行为重复追加上一节点(首条失败则 UnboundLocalError 崩溃)→ 新行为跳过并打印协议名。
 - insecure 语义统一:各解析器统一接受 `insecure/allowInsecure/allow_insecure` 的 `1/true/yes/on`(旧:trojan 只认 allowInsecure=1,hysteria2 认 insecure∈{1,true} 等)。vmess 的反向逻辑(tls 默认 insecure)保持原样。
-- multiplex 块:旧代码缺 `max-streams` 且缺 `max-connections` 时 KeyError(节点被吞)→ 新代码只写存在的字段,sing-box 用默认值。
-- tuic 与 http 的 tag 现在做 URL 解码(与其他协议一致;此前仅这两个不解码,`%20` 会原样进 tag)。
+- multiplex 块:旧代码缺 `max-streams` 且缺 `max-connections` 时 KeyError(节点被吞)→ 新代码只写存在的字段,sing-box 用默认值。ss 的 protocol 值同时收拢到 smux/yamux/h2mux 白名单(旧 ss 接受任意值、产出 sing-box 无效配置;vmess/vless/trojan 原本就是白名单)。两个连带改善:ss 备注含 "protocol" 子串不再 KeyError 吞节点;vmess 的 padding 额外接受字符串 `'True'`(此前只认 JSON true)。
+- tuic、http 与 ssr 的 tag 现在做 URL 解码(与其他协议一致;此前这三个不解码,`%20` 会原样进 tag)。
+- `common://`、`clash2base64://` 之类指向非协议模块的行:get_parser 对无 parse 属性的模块返回 None 跳过(旧实现 AttributeError 中断整个生成,clash2base64 为既有隐患,common 是本次新增模块)。
+- loads_lenient 的 ast.literal_eval 回退对 true/false/null 做子串替换,理论上可能改写含这些子串的字符串值(旧 eval 实现同样或更糟);JSON 优先路径无此问题。
 - wg 缺 `ip/address` 参数:旧 TypeError → 新 ParseError(同样被跳过,但走单点策略)。
 - ss 的 v2ray-plugin/shadow-tls 字典:`eval` → `json.loads` 优先、`ast.literal_eval` 回退;`True == 1` 使下游 `== 1` 判断行为不变。
 

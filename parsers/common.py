@@ -4,6 +4,7 @@
     parse(data: str) -> list[dict]
     通常 1 个节点；ss 带 shadow-tls 插件时返回 2 个（主节点 + detour）。
     坏输入抛 ParseError；不返回 None、不 print、不返回元组。
+    意外异常也会被 main.parse_content 单点捕获跳过，但解析器不应依赖这一点。
 
 注意：ParseError 消息不得回显 URI 内容——节点 URI 含密码等敏感信息，
 异常消息可能进入部署环境日志。
