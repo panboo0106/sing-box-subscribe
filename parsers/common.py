@@ -64,7 +64,7 @@ def first_port(port_field):
 
 
 _TRUTHY = ('1', 'true', 'yes', 'on')
-_INSECURE_KEYS = ('insecure', 'allowInsecure', 'allow_insecure', 'allow-insecure')
+_INSECURE_KEYS = ('insecure', 'allowInsecure', 'allow_insecure')
 
 
 def is_truthy(value):
