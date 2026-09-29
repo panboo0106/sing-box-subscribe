@@ -545,6 +545,7 @@ def combin_to_config(config, data):
         # 更新 outbounds，移除 wireguard 类型
         config['outbounds'] = [item for item in config['outbounds'] if item.get('type') != 'wireguard']
     inject_direct_rules(config)
+    inject_custom_rules(config)
     return config
 
 
@@ -572,6 +573,55 @@ def inject_direct_rules(config):
     direct_domains = providers.get('direct_domain', [])
     if direct_domains:
         inject('domain', direct_domains)
+
+
+def inject_custom_rules(config):
+    custom_rules = providers.get('custom_rules', [])
+    if not isinstance(custom_rules, list):
+        raise ValueError('custom_rules 必须是规则数组')
+    if not custom_rules:
+        return
+
+    tags = {item.get('tag') for item in config.get('outbounds', []) + config.get('endpoints', [])}
+    domain_fields = {'domain', 'domain_suffix'}
+    normalized = []
+    for index, rule in enumerate(custom_rules):
+        location = f'custom_rules[{index}]'
+        if not isinstance(rule, dict):
+            raise ValueError(f'{location} 必须是对象')
+        if rule.keys() - (domain_fields | {'outbound'}):
+            raise ValueError(f'{location} 仅支持 domain、domain_suffix、outbound 字段')
+        outbound = rule.get('outbound')
+        if not isinstance(outbound, str) or not outbound.strip():
+            raise ValueError(f'{location}.outbound 必须是非空出口标签')
+        if outbound not in tags:
+            raise ValueError(f'{location}.outbound 在生成配置中不存在，请核对出口标签')
+        if not domain_fields.intersection(rule):
+            raise ValueError(f'{location} 至少需要 domain 或 domain_suffix')
+        for field in sorted(domain_fields.intersection(rule)):
+            domains = rule[field]
+            if not isinstance(domains, list) or not domains or any(
+                not isinstance(domain, str) or not domain.strip() for domain in domains
+            ):
+                raise ValueError(f'{location}.{field} 必须是非空域名字符串数组')
+        normalized.append({**copy.deepcopy(rule), 'action': 'route'})
+
+    rules = config.setdefault('route', {}).setdefault('rules', [])
+    # 内置模板的内网直连是基础规则与产品分流之间的边界。
+    insert_at = next(
+        (i + 1 for i, rule in enumerate(rules)
+         if rule.get('ip_is_private') is True and rule.get('outbound') == 'direct'),
+        None,
+    )
+    if insert_at is None:
+        # 自定义模板没有该边界时，仍保留基础动作、模式与已有直连的优先级。
+        insert_at = max(
+            (i + 1 for i, rule in enumerate(rules)
+             if rule.get('action') in ('sniff', 'hijack-dns', 'reject')
+             or 'clash_mode' in rule or rule.get('outbound') == 'direct'),
+            default=0,
+        )
+    rules[insert_at:insert_at] = normalized
 
 
 def updateLocalConfig(local_host, path):

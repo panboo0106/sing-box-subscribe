@@ -97,6 +97,8 @@ Environment=TS_AUTHKEY=tskey-auth-xxxx
 
 ## AI 路由覆盖
 
+新增产品或覆盖某产品的出口时，可在 providers 文件配置 [`custom_rules`](../docs/local-providers-usage.md#自定义产品路由)，生成时统一应用到所有平台，无需修改这些模板。产品规则优先于下述 AI/国内分流，DNS 策略仍沿用模板。
+
 全部模板把 AI 服务流量优先送往自建节点，域名维护分两层：
 
 - **geosite rule_set**（主力，随上游自动保鲜）：`geosite-openai` / `geosite-anthropic` / `geosite-google-gemini` / `geosite-perplexity`。MetaCubeX meta-rules-dat 编译自 v2fly domain-list-community，按 suffix 匹配，已含 chatgpt.com、sora.com、claude.com 等新域名
