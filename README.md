@@ -88,6 +88,8 @@ python main.py --providers ./local_providers.json --template_index=0
 | ex-node-name | string | 过滤节点关键词，多个用 \| 分隔（排除） |
 | User-Agent | string | 请求订阅时使用的 UA（如 clashmeta/sing-box/v2rayng） |
 | auto_set_outbounds_dns | object | 自动设置出站对应的 DNS 服务器 |
+| custom_rules_file | string | 独立产品路由 JSON 文件，路径相对于 providers 文件目录；[示例与优先级](docs/local-providers-usage.md#自定义产品路由) |
+| custom_rules | array | 兼容旧版内联规则；不能与 custom_rules_file 同时配置 |
 | save_config_path | string | 生成配置文件的保存路径 |
 | auto_backup | boolean | 是否自动备份旧配置（true/false） |
 | exclude_protocol | string | 排除的协议类型（如 ssr,vmess，用逗号分隔） |
@@ -187,4 +189,3 @@ docker run -p 5000:5000 sing-box:latest
 }
 ```
 > `http_client` 需 sing-box v1.14+，引用顶层 `http_clients` 里定义的 tag。v1.13 及以下用 `"download_detour": "auto"`（1.14 起弃用，1.16 移除）。
-

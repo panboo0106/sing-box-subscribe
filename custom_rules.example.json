@@ -1,0 +1,10 @@
+[
+  {
+    "domain_suffix": ["example.com", "example-api.com"],
+    "outbound": "🇺🇸美国"
+  },
+  {
+    "domain": ["app.example.org"],
+    "outbound": "🇭🇰香港"
+  }
+]

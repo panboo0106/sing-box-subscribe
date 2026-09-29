@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 from collections import OrderedDict
 from parsers.clash2base64 import clash2v2ray
 from gh_proxy_helper import set_gh_proxy
+from custom_rules import apply_rules, load_rules
 
 parsers_mod = {}
 providers = None
@@ -545,6 +546,7 @@ def combin_to_config(config, data):
         # 更新 outbounds，移除 wireguard 类型
         config['outbounds'] = [item for item in config['outbounds'] if item.get('type') != 'wireguard']
     inject_direct_rules(config)
+    apply_rules(config, providers.get('custom_rules', []))
     return config
 
 
@@ -554,15 +556,16 @@ def inject_direct_rules(config):
     rules = config['route']['rules']
 
     def inject(field, items, extra_filter=None):
+        boundary = next((i for i, rule in enumerate(rules) if 'custom_rules' in rule), len(rules))
         target = next(
-            (r for r in rules
+            (r for r in rules[:boundary]
              if field in r and r.get('outbound') == 'direct' and (extra_filter is None or extra_filter(r))),
             None
         )
         if target:
             target[field].extend(items)
         else:
-            first_direct = next((i for i, r in enumerate(rules) if r.get('outbound') == 'direct'), len(rules))
+            first_direct = next((i for i, r in enumerate(rules[:boundary]) if r.get('outbound') == 'direct'), boundary)
             rules.insert(first_direct, {field: list(items), 'action': 'route', 'outbound': 'direct'})
 
     direct_ips = providers.get('direct_ip', [])
@@ -686,6 +689,7 @@ if __name__ == '__main__':
         providers = json.loads(temp_json_data)
     else:
         providers = load_json(providers_file)  # 加载本地 providers.json 或用户指定的文件
+    providers['custom_rules'] = load_rules(providers, None if temp_json_data and temp_json_data != '{}' else providers_file)
     if args.all_templates and not providers.get('Only-nodes') and not providers.get('config_template'):
         template_list = get_template()
         if len(template_list) < 1:
