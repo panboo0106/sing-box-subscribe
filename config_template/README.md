@@ -97,7 +97,7 @@ Environment=TS_AUTHKEY=tskey-auth-xxxx
 
 ## AI 路由覆盖
 
-新增产品或覆盖某产品的出口时，可在 providers 文件配置 [`custom_rules`](../docs/local-providers-usage.md#自定义产品路由)，生成时统一应用到所有平台，无需修改这些模板。产品规则优先于下述 AI/国内分流，DNS 策略仍沿用模板。
+新增产品或覆盖某产品的出口时，在独立的 `custom_rules.local.json` 维护规则，并在 providers 文件用 [`custom_rules_file`](../docs/local-providers-usage.md#自定义产品路由) 引用，生成时统一应用到所有平台。模板的 `{"custom_rules": true}` 标记位于基础处理之后、AI/国内分流之前，生成时替换并移除。产品规则优先于下述 AI/国内分流，DNS 策略仍沿用模板；优先级、冲突提示与自定义模板接入说明见上述链接。
 
 全部模板把 AI 服务流量优先送往自建节点，域名维护分两层：
 
@@ -152,7 +152,7 @@ AI 域名 → AI selector → selfBuild (优先) → selfBuildAuto (自动) → 
 
 ## 验证配置
 
-模板里的 `filter` + `{all}` 是订阅工具的 DSL，**不能直接对模板跑 `sing-box check`**（会报 `unknown field "filter"`）。先生成 config 再检查：
+模板里的 `filter`、`{all}` 和 `{"custom_rules": true}` 是订阅工具的 DSL，**不能直接对模板跑 `sing-box check`**（会报未知字段）。先生成 config 再检查：
 
 ```bash
 uv run python3 main.py --template_index <idx> --providers local_providers.json

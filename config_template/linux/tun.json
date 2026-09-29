@@ -369,6 +369,9 @@
         "outbound": "direct"
       },
       {
+        "custom_rules": true
+      },
+      {
         "domain": [
           "aiplatform.googleapis.com",
           "copilot.microsoft.com",
