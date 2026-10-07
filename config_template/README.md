@@ -133,11 +133,12 @@ AI 域名 → AI selector → selfBuild (优先) → selfBuildAuto (自动) → 
 
 ```json
 "http_clients": [
-  { "tag": "direct-http", "detour": "direct" }
+  { "tag": "direct-http" }
 ]
 ```
 
 - 模板走 `direct`：`.srs` 托管在 jsDelivr，直连比绕代理快，且避免「代理没起来 → 规则集拉不到 → 路由退化」的启动期循环依赖
+- **`direct-http` 不写 `detour` 字段**：不写即 direct，语义相同。写 `"detour": "direct"` 指向空配置的 direct outbound 时，sing-box 1.14.2 在**无规则集缓存的首次启动**会 FATAL `detour to an empty direct outbound makes no sense`（`sing-box check` 查不出，只有真跑才触发；2026-10-07 实测）
 - 每个 `rule_set` 条目另外显式写了 `"http_client": "direct-http"`。虽然与 `default_http_client` 重复，但让单条规则集改走代理时只需改这一行
 - `dial` 字段（`detour` 等）复用 `route.default_domain_resolver`，无需单独配 `domain_resolver`
 
