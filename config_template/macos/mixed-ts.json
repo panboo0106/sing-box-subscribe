@@ -1,0 +1,432 @@
+{
+  "log": {
+    "level": "info",
+    "timestamp": true
+  },
+  "experimental": {
+    "clash_api": {
+      "external_controller": "127.0.0.1:9090",
+      "external_ui": "ui",
+      "secret": "",
+      "external_ui_download_url": "https://github.com/MetaCubeX/metacubexd/archive/refs/heads/gh-pages.zip",
+      "external_ui_download_detour": "Proxy",
+      "default_mode": "rule"
+    },
+    "cache_file": {
+      "enabled": true,
+      "store_fakeip": false,
+      "store_dns": true
+    }
+  },
+  "dns": {
+    "servers": [
+      {
+        "tag": "remote",
+        "type": "tls",
+        "server": "8.8.8.8",
+        "detour": "Proxy"
+      },
+      {
+        "tag": "local",
+        "type": "https",
+        "server": "223.5.5.5"
+      },
+      {
+        "tag": "tailscale-dns",
+        "type": "tailscale",
+        "endpoint": "ts",
+        "accept_default_resolvers": false
+      }
+    ],
+    "rules": [
+      {
+        "domain_suffix": [
+          ".ts.net",
+          ".tailscale.net"
+        ],
+        "action": "route",
+        "server": "tailscale-dns"
+      },
+      {
+        "domain_suffix": [
+          ".tailscale.com",
+          ".tailscale.io"
+        ],
+        "action": "route",
+        "server": "remote"
+      },
+      {
+        "rule_set": "geosite-category-ads-all",
+        "action": "reject"
+      },
+      {
+        "clash_mode": "direct",
+        "action": "route",
+        "server": "local"
+      },
+      {
+        "clash_mode": "global",
+        "action": "route",
+        "server": "remote"
+      },
+      {
+        "domain_suffix": [
+          ".arpa",
+          ".local"
+        ],
+        "action": "route",
+        "server": "local"
+      },
+      {
+        "domain": [
+          "aiplatform.googleapis.com",
+          "copilot.microsoft.com",
+          "sydney.bing.com",
+          "gateway.ai.cloudflare.com"
+        ],
+        "action": "route",
+        "server": "remote"
+      },
+      {
+        "rule_set": [
+          "geosite-openai",
+          "geosite-anthropic",
+          "geosite-google-gemini",
+          "geosite-perplexity"
+        ],
+        "action": "route",
+        "server": "remote"
+      },
+      {
+        "rule_set": "geosite-cn",
+        "action": "route",
+        "server": "local"
+      }
+    ],
+    "final": "remote",
+    "cache_capacity": 4096
+  },
+  "http_clients": [
+    {
+      "tag": "direct-http"
+    }
+  ],
+  "inbounds": [
+    {
+      "tag": "mixed-in",
+      "type": "mixed",
+      "listen": "127.0.0.1",
+      "listen_port": 7890
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "Proxy",
+      "type": "selector",
+      "outbounds": [
+        "auto",
+        "🇭🇰香港",
+        "🇺🇸美国",
+        "selfBuild",
+        "selfBuildAuto",
+        "AI",
+        "Global",
+        "direct"
+      ]
+    },
+    {
+      "tag": "AI",
+      "type": "selector",
+      "outbounds": [
+        "🇺🇸美国",
+        "selfBuild",
+        "direct"
+      ],
+      "default": "🇺🇸美国"
+    },
+    {
+      "tag": "🇭🇰香港",
+      "type": "urltest",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "🏠🇭🇰"
+          ]
+        }
+      ],
+      "url": "http://www.gstatic.com/generate_204",
+      "interval": "10m",
+      "idle_timeout": "30m",
+      "tolerance": 100
+    },
+    {
+      "tag": "🇺🇸美国",
+      "type": "urltest",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "🏠🇺🇸"
+          ]
+        }
+      ],
+      "url": "http://www.gstatic.com/generate_204",
+      "interval": "10m",
+      "idle_timeout": "30m",
+      "tolerance": 100
+    },
+    {
+      "tag": "selfBuildAuto",
+      "type": "urltest",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "自建|selfbuild|🏠"
+          ]
+        }
+      ],
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": "10m",
+      "idle_timeout": "30m",
+      "tolerance": 100
+    },
+    {
+      "tag": "selfBuild",
+      "type": "selector",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "自建|selfbuild|🏠"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "auto",
+      "type": "urltest",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "exclude",
+          "keywords": [
+            "网站|地址|剩余|过期|时间|有效"
+          ]
+        }
+      ],
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": "10m",
+      "idle_timeout": "30m",
+      "tolerance": 100
+    },
+    {
+      "tag": "direct",
+      "type": "direct"
+    },
+    {
+      "tag": "Global",
+      "type": "selector",
+      "outbounds": [
+        "{all}",
+        "direct"
+      ]
+    },
+    {
+      "tag": "China",
+      "type": "selector",
+      "outbounds": [
+        "direct",
+        "Proxy"
+      ]
+    }
+  ],
+  "route": {
+    "auto_detect_interface": true,
+    "final": "Proxy",
+    "default_domain_resolver": {
+      "server": "local"
+    },
+    "default_http_client": "direct-http",
+    "rules": [
+      {
+        "inbound": [
+          "mixed-in"
+        ],
+        "action": "sniff"
+      },
+      {
+        "type": "logical",
+        "mode": "or",
+        "rules": [
+          {
+            "port": 53
+          },
+          {
+            "protocol": "dns"
+          }
+        ],
+        "action": "hijack-dns"
+      },
+      {
+        "rule_set": "geosite-category-ads-all",
+        "action": "reject"
+      },
+      {
+        "ip_cidr": [
+          "100.64.0.0/10",
+          "fd7a:115c:a1e0::/48"
+        ],
+        "action": "route",
+        "outbound": "ts"
+      },
+      {
+        "domain_suffix": [
+          ".ts.net",
+          ".tailscale.net"
+        ],
+        "action": "route",
+        "outbound": "ts"
+      },
+      {
+        "domain_suffix": [
+          ".tailscale.com",
+          ".tailscale.io"
+        ],
+        "action": "route",
+        "outbound": "Proxy"
+      },
+      {
+        "clash_mode": "direct",
+        "action": "route",
+        "outbound": "direct"
+      },
+      {
+        "clash_mode": "global",
+        "action": "route",
+        "outbound": "Global"
+      },
+      {
+        "domain": [
+          "clash.razord.top",
+          "yacd.metacubex.one",
+          "yacd.haishan.me",
+          "d.metacubex.one"
+        ],
+        "action": "route",
+        "outbound": "direct"
+      },
+      {
+        "ip_is_private": true,
+        "action": "route",
+        "outbound": "direct"
+      },
+      {
+        "custom_rules": true
+      },
+      {
+        "domain": [
+          "aiplatform.googleapis.com",
+          "copilot.microsoft.com",
+          "sydney.bing.com",
+          "gateway.ai.cloudflare.com"
+        ],
+        "action": "route",
+        "outbound": "AI"
+      },
+      {
+        "rule_set": [
+          "geosite-openai",
+          "geosite-anthropic",
+          "geosite-google-gemini",
+          "geosite-perplexity"
+        ],
+        "action": "route",
+        "outbound": "AI"
+      },
+      {
+        "rule_set": [
+          "geoip-cn",
+          "geosite-cn"
+        ],
+        "action": "route",
+        "outbound": "China"
+      }
+    ],
+    "rule_set": [
+      {
+        "tag": "geosite-category-ads-all",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/category-ads-all.srs",
+        "http_client": "direct-http"
+      },
+      {
+        "tag": "geosite-openai",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/openai.srs",
+        "http_client": "direct-http"
+      },
+      {
+        "tag": "geosite-anthropic",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/anthropic.srs",
+        "http_client": "direct-http"
+      },
+      {
+        "tag": "geosite-google-gemini",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/google-gemini.srs",
+        "http_client": "direct-http"
+      },
+      {
+        "tag": "geosite-perplexity",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/perplexity.srs",
+        "http_client": "direct-http"
+      },
+      {
+        "tag": "geoip-cn",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geoip/cn.srs",
+        "http_client": "direct-http"
+      },
+      {
+        "tag": "geosite-cn",
+        "type": "remote",
+        "format": "binary",
+        "url": "https://testingcf.jsdelivr.net/gh/MetaCubeX/meta-rules-dat@sing/geo/geosite/cn.srs",
+        "http_client": "direct-http"
+      }
+    ]
+  },
+  "endpoints": [
+    {
+      "type": "tailscale",
+      "tag": "ts",
+      "state_directory": "$HOME/.config/sing-box/tailscale",
+      "auth_key": "$TS_AUTHKEY",
+      "detour": "selfBuild"
+    }
+  ]
+}
