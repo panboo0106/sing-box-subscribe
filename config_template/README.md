@@ -10,7 +10,8 @@ config_template/
 │   └── tun.json          系统级代理，配合官方 Tailscale App（快捷指令切换）
 ├── macos/
 │   ├── tun.json          系统级代理，配合官方 Tailscale App
-│   └── mixed.json        浏览器代理
+│   ├── mixed.json        浏览器代理
+│   └── mixed-ts.json     浏览器代理 + 内置 TS endpoint（aTrust 等场景）
 ├── android/
 │   └── tun.json          系统级 + 内置 TS endpoint
 ├── linux/
@@ -27,6 +28,7 @@ config_template/
 | **iOS** | `ios/tun.json` | SFI 只能跑一个 VPN，用快捷指令在 sing-box 与 Tailscale App 之间切换 |
 | **macOS** | `macos/tun.json` | 配合官方 Tailscale 客户端，NAT 穿透更稳 |
 | **macOS（仅浏览器）** | `macos/mixed.json` | 配合 SwitchyOmega 等插件 |
+| **macOS（aTrust 设备）** | `macos/mixed-ts.json` | mixed + 内置 TS endpoint，用户态零 VPN 冲突 |
 | **Windows** | `macos/tun.json` | 同 macOS（不依赖 macOS 特有字段） |
 | **Android** | `android/tun.json` | 内置 Tailscale endpoint（与官方 App 互斥） |
 | **Linux** | `linux/tun.json` | 内置 TS + `auto_redirect` 高性能 nftables 转发 |
@@ -45,6 +47,9 @@ config_template/
 
 - `macos/tun.json`：tun + mixed 双 inbound，含 `route_exclude_address: 100.64.0.0/10` 让 Tailscale App 流量绕过 sing-box TUN
 - `macos/mixed.json`：仅 mixed，浏览器代理场景
+- `macos/mixed-ts.json`：mixed + 内置 Tailscale endpoint，给装了 aTrust（公司零信任）等无法与官方 Tailscale 客户端共存的设备——tsnet 全程用户态，不建网卡、不动系统路由/DNS，与管控端零冲突；不要在此类设备上开 1.13 的 `system_interface`（会建系统 TUN，把冲突面引回来）。访问 tailnet 走 mixed 端口：`socks5h` 远端解析可吃到 `.ts.net` 解析（本地解析的应用拿不到，最稳用 `100.x.x.x` IP），SSH 用 ProxyCommand
+  - `state_directory`/`auth_key` 规则同 Linux（`$HOME/...` + `$TS_AUTHKEY` 占位符）：macOS CLI 上下文 HOME 已设。**Windows 上 HOME 未设**，会展开成空串撞只读根目录（同 Android 坑），Windows 用此模板需改成绝对路径
+  - aTrust 全隧道时段，sing-box 所有出站（代理节点 + tsnet 控制面/DERP）都被引进公司隧道，节点全红、TS 卡登录/离线属预期，退出 aTrust 后恢复
 
 ### Android
 
@@ -185,7 +190,8 @@ uv run python3 main.py --template_index 1 --providers local_providers.json  # io
 1: ios/tun
 2: linux/tun
 3: macos/mixed
-4: macos/tun
+4: macos/mixed-ts
+5: macos/tun
 ```
 
 ## sing-box 版本兼容性
