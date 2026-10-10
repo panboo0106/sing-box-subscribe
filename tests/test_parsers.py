@@ -18,8 +18,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 os.chdir(ROOT)
 
-from parsers import anytls, http as http_parser, hysteria, hysteria2, socks, ss, ssr, trojan, tuic, vless, vmess, wg
-from parsers.common import ParseError
+from parsers import anytls, http as http_parser, https as https_parser, hysteria, hysteria2, socks, ss, ssr, trojan, tuic, vless, vmess, wg  # noqa: E402
+from parsers.common import ParseError  # noqa: E402
 
 failures = []
 
@@ -253,6 +253,20 @@ def test_http():
     assert node["server"] == "9.9.9.9"
     assert node["server_port"] == 8080
     assert node["tls"]["enabled"] is True
+
+
+def test_https():
+    # https 解析器的备注取自 base64 解码内容里的 '/#' 分隔（URL fragment 不参与）
+    node = one(https_parser.parse, "https://" + b64("9.9.9.9:443/#HTTPS%20Node"))
+    assert node["tag"] == "HTTPS Node"
+    assert node["type"] == "http"
+    assert node["server"] == "9.9.9.9"
+    assert node["server_port"] == 443
+    assert node["tls"]["enabled"] is True
+
+
+def test_https_malformed():
+    expect_parse_error(https_parser.parse, "https://" + b64("9.9.9.9:port/#Bad"))
 
 
 def test_anytls():
