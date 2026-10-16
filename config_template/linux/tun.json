@@ -154,11 +154,12 @@
       "tag": "Proxy",
       "type": "selector",
       "outbounds": [
+        "selfBuild-reality",
+        "selfBuild-hy2",
         "auto",
         "🇭🇰香港",
         "🇺🇸美国",
         "selfBuild",
-        "selfBuildAuto",
         "AI",
         "Global",
         "direct"
@@ -213,7 +214,7 @@
       "tolerance": 100
     },
     {
-      "tag": "selfBuildAuto",
+      "tag": "selfBuild-reality",
       "type": "urltest",
       "outbounds": [
         "{all}"
@@ -223,6 +224,37 @@
           "action": "include",
           "keywords": [
             "自建|selfbuild|🏠"
+          ]
+        },
+        {
+          "action": "include",
+          "keywords": [
+            "reality"
+          ]
+        }
+      ],
+      "url": "https://www.gstatic.com/generate_204",
+      "interval": "10m",
+      "idle_timeout": "30m",
+      "tolerance": 100
+    },
+    {
+      "tag": "selfBuild-hy2",
+      "type": "urltest",
+      "outbounds": [
+        "{all}"
+      ],
+      "filter": [
+        {
+          "action": "include",
+          "keywords": [
+            "自建|selfbuild|🏠"
+          ]
+        },
+        {
+          "action": "include",
+          "keywords": [
+            "hy2|hysteria"
           ]
         }
       ],
