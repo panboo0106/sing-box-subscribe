@@ -100,6 +100,12 @@ Environment=TS_AUTHKEY=tskey-auth-xxxx
 - **macOS（CLI）/ Linux**：把系统 DNS 设为任意公网地址（如 `8.8.8.8`），查询即进入 TUN 被劫持，实际上游仍由模板 `dns.servers` 决定
 - **Android（SFA）/ iOS（SFI）**：客户端把 VPN DNS 指进 TUN，不受影响
 
+**官方 Tailscale App 接管 DNS 是同一类坑（macOS，2026-10-05 实测）**：App 开启「Use Tailscale DNS」后 MagicDNS（`100.100.100.100`）成为系统主解析器，非 tailnet 域名由 tailscaled 转发给「系统默认 DNS」，且转发流量**从物理接口直发、不进 sing-box TUN**——上游即使是公网地址也进不了 TUN。被墙域名因此拿到 GFW 污染 IP（实测 `www.google.com` → `157.240.7.20` / `2001::1`），症状是只有国外网站打不开。此时 `dig @8.8.8.8` 仍返回 fakeip（hijack 本身正常），要用 `dscacheutil -q host -a name www.google.com` 才能看到应用的真实解析路径已绕开 sing-box。
+
+- **管理台配 Global nameservers 救不了**：转发流量绕过 TUN，换任何上游都没用；8.8.8.8 明文 UDP 在境内被注入，114/阿里 DoH 的递归结果对被墙域名本身就是脏的
+- **修复**：`tailscale set --accept-dns=false`（macOS App 版二进制在 `/Applications/Tailscale.app/Contents/MacOS/Tailscale`；Windows 同理），系统解析回到本地 DNS → 进 TUN 被劫持。代价：`*.ts.net` 设备名不再走系统解析，需要时用 Tailscale IP；恢复 `--accept-dns=true`
+- **不受影响**：Android/Linux（内置 endpoint，`.ts.net` 由 sing-box `tailscale-dns` 处理）；iOS（sing-box 与 Tailscale App 不同时运行）
+
 ## AI 路由覆盖
 
 新增产品或覆盖某产品的出口时，在独立的 `custom_rules.local.json` 维护规则，并在 providers 文件用 [`custom_rules_file`](../docs/local-providers-usage.md#自定义产品路由) 引用，生成时统一应用到所有平台。模板的 `{"custom_rules": true}` 标记位于基础处理之后、AI/国内分流之前，生成时替换并移除。产品规则优先于下述 AI/国内分流，DNS 策略仍沿用模板；优先级、冲突提示与自定义模板接入说明见上述链接。
