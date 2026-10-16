@@ -120,10 +120,18 @@ Environment=TS_AUTHKEY=tskey-auth-xxxx
 **流量走向**：
 
 ```
-AI 域名 → AI selector → selfBuild (优先) → selfBuildAuto (自动) → direct (兜底)
+AI 域名 → AI selector → 🇺🇸美国 (默认) → selfBuild → direct
+其余国外流量 → Proxy selector → selfBuild-reality (默认) → selfBuild-hy2 → auto → …
 ```
 
-> Tailscale endpoint 模板里 `ts.detour` 指向 `selfBuild`（手动选择器，立即可用），而非 `selfBuildAuto`（urltest，需等待健康检查）。避免 selfBuild 全挂时 Tailscale 也连不上的连锁失败。
+**自建节点按协议拆组**（2026-10-16 晚高峰实测）：urltest 的 `generate_204` 探测只有几百字节，触发不了运营商对国际出口 UDP 持续流量的 QoS 限速——探测显示 hy2 节点 107ms「健康」，真实吞吐只剩 10~100 KB/s，混合组整晚选中跑不动的节点。同服务器对照：hy2（UDP）11 KB/s，reality（TCP）满速 61 Mbps。
+
+- `selfBuild-reality`（TCP）：urltest 只含 reality 节点，是 `Proxy` 的默认出口
+- `selfBuild-hy2`（UDP）：urltest 只含 hy2/hysteria 节点，线路好时（通常白天）手动切换
+- `selfBuild`（手动 selector）仍含全部自建节点；`auto` 仍为全网混合组，协议混选的风险仍在，保留作手动选项
+- 过滤结果为空时（如 reality 节点全部下线），生成器把该组回退为 `direct` 并打印警告——此时 `Proxy` 默认出口等于直连，国外站点会打不开，看到警告先切 `selfBuild-hy2` 或 `auto`
+
+> Tailscale endpoint 模板里 `ts.detour` 指向 `selfBuild`（手动选择器，立即可用），而非 urltest 组（需等待健康检查）。避免 selfBuild 全挂时 Tailscale 也连不上的连锁失败。
 
 ## 性能调优默认值
 
@@ -134,6 +142,7 @@ AI 域名 → AI selector → selfBuild (优先) → selfBuildAuto (自动) → 
 | `urltest.idle_timeout` | 30m | 30 分钟无流量停止测速，省电 |
 | `urltest.tolerance` | 100 ms | 抖动门槛，避免频繁切换 |
 | `tun.route_exclude_address` | RFC1918 + link-local（v4/v6）+ Tailscale（macOS / iOS） | 私有网段不进 TUN，DNS 前提见 §DNS 劫持生效前提 |
+| `tun.stack` | `gvisor`（Linux 模板 `system` + `auto_redirect`） | Apple Silicon 实测直连单流 ~427 Mbps，家用线速下非瓶颈；sing-box 1.15 弃用该字段、1.17 移除，升级时直接删除即可切到 sing-tun 内置栈 |
 | `cache_file.store_dns` | true | 持久化 DNS 缓存 |
 | `cache_file.store_fakeip` | true（仅 tun + fakeip 时） | 持久化 fakeip 映射 |
 | `route.default_http_client` | `direct-http` | 规则集下载走 direct，见 §规则集下载 |
