@@ -94,7 +94,7 @@ cp custom_rules.example.json custom_rules.local.json
 
 - `domain`：精确匹配完整域名；`domain_suffix`：匹配域名后缀。至少填写一个非空字符串数组，同时填写时为 OR 匹配。
 - `domain_suffix: ["example.com"]` 覆盖根域名及子域名；`[".example.com"]` 只覆盖子域名，不包含根域名。见 [sing-box 后缀匹配说明](https://sing-box.sagernet.org/migration/#domain_suffix-behavior-update)。
-- `outbound`：与生成配置中的出口标签完全一致，可选已有分组、具体节点或 endpoint。内置模板有 `🇺🇸美国`、`🇭🇰香港`、`selfBuild`、`AI`、`Proxy`、`direct`。标签存在只代表配置可引用，不保证组内节点可用；地区组没有匹配节点时仍沿用现有的 direct 兜底。
+- `outbound`：与生成配置中的出口标签完全一致，可选已有分组、具体节点或 endpoint。内置模板有 `🇺🇸美国`、`🇭🇰香港`、`NonChina`、`selfBuild`、`AI`、`Proxy`、`direct`。标签存在只代表配置可引用，不保证组内节点可用；美国、香港等地区组没有匹配节点时仍沿用现有的 direct 兜底。共享的 [`NonChina`](../config_template/README.md#非中国出口分组) 组排除中国大陆、香港、澳门，无匹配节点时阻断，不回退直连。需要这一出口限制的多个产品可统一引用 `NonChina`。
 - 每条只接受上述三个字段，生成器自动补 `action: route`。未知字段、空匹配、错误类型或不存在的出口会报出 `custom_rules[序号]`，终止当前配置生成。
 - 不配置来源或在规则文件中填写 `[]` 保持原有分流；`Only-nodes: true` 时跳过规则文件读取和路由校验。
 - 旧版在 providers 内写 `custom_rules: [...]` 的方式仍兼容；它与 `custom_rules_file` 不能同时配置，即便数组为空。Web 的 `--temp_json_data` 只支持内联规则，不允许读取服务器本地规则文件。

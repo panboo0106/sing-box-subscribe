@@ -27,10 +27,10 @@
         "detour": "Proxy"
       },
       {
-        "tag": "gitlab-dns",
+        "tag": "non-china-dns",
         "type": "tls",
         "server": "8.8.8.8",
-        "detour": "GitLab"
+        "detour": "NonChina"
       },
       {
         "tag": "local",
@@ -44,7 +44,7 @@
           "gitlab.com"
         ],
         "action": "route",
-        "server": "gitlab-dns"
+        "server": "non-china-dns"
       },
       {
         "rule_set": "geosite-category-ads-all",
@@ -137,11 +137,11 @@
       "default": "🇺🇸美国"
     },
     {
-      "tag": "GitLab",
+      "tag": "NonChina",
       "type": "urltest",
       "outbounds": [
         "{all}",
-        "gitlab-block"
+        "non-china-block"
       ],
       "filter": [
         {
@@ -157,7 +157,7 @@
       "tolerance": 100
     },
     {
-      "tag": "gitlab-block",
+      "tag": "non-china-block",
       "type": "block"
     },
     {
@@ -335,7 +335,7 @@
           "gitlab.com"
         ],
         "action": "route",
-        "outbound": "GitLab"
+        "outbound": "NonChina"
       },
       {
         "rule_set": "geosite-category-ads-all",
