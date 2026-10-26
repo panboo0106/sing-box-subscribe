@@ -365,6 +365,8 @@ def set_proxy_rule_dns(config):
     dns_rules = config['dns']['rules']
     asod = providers["auto_set_outbounds_dns"]
     for rule in config_rules:
+        if rule.get('network') == 'icmp' and not rule.get('invert'):
+            continue
         if 'outbound' not in rule:
             continue
         if rule['outbound'] not in ['block', 'dns-out']:

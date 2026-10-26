@@ -347,6 +347,11 @@
         "action": "hijack-dns"
       },
       {
+        "network": "icmp",
+        "action": "route",
+        "outbound": "direct"
+      },
+      {
         "rule_set": "geosite-category-ads-all",
         "action": "reject"
       },
