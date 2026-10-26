@@ -108,6 +108,14 @@ Environment=TS_AUTHKEY=tskey-auth-xxxx
 - **修复**：`tailscale set --accept-dns=false`（macOS App 版二进制在 `/Applications/Tailscale.app/Contents/MacOS/Tailscale`；Windows 同理），系统解析回到本地 DNS → 进 TUN 被劫持。代价：`*.ts.net` 设备名不再走系统解析，需要时用 Tailscale IP；恢复 `--accept-dns=true`
 - **不受影响**：Android/Linux（内置 endpoint，`.ts.net` 由 sing-box `tailscale-dns` 处理）；iOS（sing-box 与 Tailscale App 不同时运行）
 
+## GitLab 出口限制
+
+全部模板将 `gitlab.com` 及其子域名送往独立的 `GitLab` 自动测速组。该规则优先于 ICMP 直连、Clash 的直连/全局模式和自定义产品规则。GitLab 的 DNS 查询经同一分组出站，tun 模板仍为 A/AAAA 查询返回 FakeIP。
+
+`GitLab` 组按节点名称排除中国大陆、香港、澳门，识别地区旗帜、常见中英文名称和 CN/HK/MO 编号。地区识别依赖订阅中的命名，供应商更改或错误标注出口时需检查节点名称和实际出口 IP。分组不引用 `Proxy`、`AI` 或 `direct`，避免通过其他分组选回受限出口。
+
+组内始终保留 [`block` 出站](https://sing-box.sagernet.org/configuration/outbound/block/)作为兜底。过滤后没有节点时，GitLab 连接会被阻断，不会沿用生成器的空分组直连兜底。其他域名的分流不变。
+
 ## AI 路由覆盖
 
 新增产品或覆盖某产品的出口时，在独立的 `custom_rules.local.json` 维护规则，并在 providers 文件用 [`custom_rules_file`](../docs/local-providers-usage.md#自定义产品路由) 引用，生成时统一应用到所有平台。模板的 `{"custom_rules": true}` 标记位于基础处理之后、AI/国内分流之前，生成时替换并移除。产品规则优先于下述 AI/国内分流，DNS 策略仍沿用模板；优先级、冲突提示与自定义模板接入说明见上述链接。
